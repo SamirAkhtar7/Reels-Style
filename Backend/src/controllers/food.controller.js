@@ -1,6 +1,9 @@
 const foodModel = require("../models/foodItem.model");
 const storageService =require("../services/storage.service")
-const {v4:uuid } = require("uuid")
+const { v4: uuid } = require("uuid")
+
+
+
 exports.createFood = async (req, res) => {
 
     // console.log(req.body)
@@ -20,3 +23,11 @@ exports.createFood = async (req, res) => {
         food:foodItem
     })
 };
+
+exports.getFoodItems = async (req, res) => {
+    const foodItems = await foodModel.find({})
+    res.status(200).json({
+        message: "Food itms fetched succrssfully",
+        foodItems
+    })
+}

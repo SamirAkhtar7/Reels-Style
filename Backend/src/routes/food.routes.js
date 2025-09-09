@@ -11,6 +11,11 @@ const upload = multer({
 
 
 const router = express.Router();
-router.post("/",authMiddleware.authFoodpartnerMiddleware,upload.single("video") ,foodController.createFood);
+router.post("/", authMiddleware.authFoodpartnerMiddleware, upload.single("video"), foodController.createFood);
+/*GET /api/food/*/
+router.get("/",
+   authMiddleware.authUserMiddleware,
+    foodController.getFoodItems
+)
 
 module.exports = router;
