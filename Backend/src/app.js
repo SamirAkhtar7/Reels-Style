@@ -3,8 +3,8 @@
 
 const express = require('express');
 const cookiesParser= require('cookie-parser')
-const authRouter = require('./routes/auth.routes')
-const dotenv = require("dotenv").config()
+const authRouters = require('./routes/auth.routes')
+const foodRouters = require("./routes/food.routes")
 
 const app = express()
 app.use(cookiesParser());
@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
    res.send("hello")
 })
 
-app.use("/api/auth",authRouter)
+app.use("/api/auth", authRouters)
+app.use("/api/food",foodRouters)
 
 module.exports = app
