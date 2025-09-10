@@ -10,7 +10,7 @@ const connectDb = () => {
 
       //atlas DataBase
     //   .connect(
-    //     "mongodb+srv://sameerakhtar40444:dzL9FpXUtYzmMiox@clusterfirst.zreyych.mongodb.net/reels-Style/user"
+    //     "mongodb+srv://sameerakhtar40444:dzL9FpXUtYzmMiox@clusterfirst.zreyych.mongodb.net/reels-Style"
     //   )
 
       .then(() => {
