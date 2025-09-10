@@ -1,0 +1,21 @@
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+
+import SignUp from "../pages/SignUp";
+import SignIn from "../pages/SignIn";
+
+const AppRoutes = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/signup" element={<SignUp />}></Route>
+        <Route path="/signin" element={<SignIn />}></Route>
+        <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>
+        <Route path="/food-partner/login" element={<h1>hello</h1>}></Route>
+      </Routes>
+    </Router>
+  );
+};
+
+export default AppRoutes;
