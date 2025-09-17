@@ -4,6 +4,7 @@ const foodpartnerModel = require("../models/foodpartner.model");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const { getToken } = require("../utils/authToken");
+const { sendOtpEmail } = require("../utils/mail");
 
 exports.register = async (req, res) => {
   try {
@@ -109,6 +110,82 @@ exports.logoutUser = async (req, res) => {
   res.clearCookies("token");
   res.status(200).json({ message: "User logged out successfully" });
 };
+
+exports.sendOtp = async (req, res) => {
+  try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+    const { email } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOtp = otp;
+    user.otpExpires = Date.now() + 10 * 60 * 1000; //10 minutes
+    user.isOtpVerified = false;
+    await user.save();
+    await sendOtpEmail(email, otp);
+    return res.status(200).json({ message: "OTP sent to email" });
+  } catch (err) {
+    return res.status(500).json({ message: `${err}` });
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+    const { email, otp } = req.body;
+    const user = await userModel.findOne({ email })
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    if (user.resetOtp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+    user.isOtpVerified = true;
+    user.resetOtp = null;
+    user.otpExpires = null;
+    await user.save();
+    return res.status(200).json({ message: "OTP verified" });
+  } catch (err) {
+    return res.status(500).json({ message: `${err}` });
+  }
+};
+
+exports.resetOtp = async (req, res) => {
+  try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+    const { email, password } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    if (!user.isOtpVerified) {
+      return res.status(400).json({ message: "OTP not verified" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.isOtpVerified = false;
+    await user.save();
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: `${err}` });
+  }
+}
+
+
 
 exports.registerFoodPartner = async (req, res) => {
   const { name, email, password } = req.body;
