@@ -186,6 +186,34 @@ exports.resetOtp = async (req, res) => {
 }
 
 
+exports.googleAuth = async (req, res) => {
+  try {
+    const { fullName, email, mobile,role } = req.body;
+   let user = await userModel.findOne({ email });
+    if (!user) {
+     user = await userModel.create({
+        fullName,
+        email,
+        mobile,
+        role
+        
+      });
+
+    }
+    const token = await getToken(user._id);
+     res.cookie("token", token, {
+       httpOnly: true,
+       secure: process.env.NODE_ENV === "production",
+       sameSite: "Strict",
+       maxAge: 7 * 24 * 60 * 60 * 1000,
+     });
+    return res.status(200).json({ message: "Google Auth successful" });
+    
+  } catch (err) {
+    return res.status(500).json({ message: `GoogleAuth Error:${err}` });
+  }
+}
+
 
 exports.registerFoodPartner = async (req, res) => {
   const { name, email, password } = req.body;

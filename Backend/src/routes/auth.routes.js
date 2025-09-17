@@ -63,6 +63,9 @@ router.post(
 );
 
 
+router.post("/user/google-auth", body("email").trim().isEmail().withMessage("Valid email required"),
+  authController.googleAuth);
+
 
 router.get("/user/logout", authController.logoutUser);
 

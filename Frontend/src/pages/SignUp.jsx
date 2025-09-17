@@ -4,6 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import axios from "axios";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../firebase";
+import { ClipLoader } from "react-spinners";
+
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -14,6 +18,7 @@ const SignUp = () => {
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -33,8 +38,9 @@ const SignUp = () => {
       let message = err.message || "Registration failed";
 
       if (resp) {
+        // show only the first error message if express-validator returned multiple
         if (Array.isArray(resp.errors) && resp.errors.length) {
-          message = resp.errors.map((x) => x.msg).join(", ");
+          message = resp.errors[0].msg;
         } else if (resp.message) {
           message = resp.message;
         }
@@ -49,7 +55,39 @@ const SignUp = () => {
       setPassword("");
       setMobile("");
     }
-    
+  };
+
+
+  const handleGoogleAuth = async () => {
+    if (!mobile) {
+      alert("Please enter mobile number");
+      return;
+    }
+
+    const provider = new GoogleAuthProvider();
+    try {
+      const firebaseResult = await signInWithPopup(auth, provider);
+      const { displayName, email: firebaseEmail } = firebaseResult.user || {};
+
+      const apiResult = await axios.post(
+        `/api/auth/user/google-auth`,
+        {
+          fullName: displayName,
+          email: firebaseEmail,
+          role,
+          mobile,
+        },
+        { withCredentials: true }
+      );
+
+      console.log("Google SignIn Success:", apiResult.data);
+      navigate("/");
+    } catch (err) {
+      console.error("Google auth failed:", err);
+      setError(
+        err.response?.data?.message || err.message || "Google sign-in failed"
+      );
+    }
   };
 
   return (
@@ -85,6 +123,7 @@ const SignUp = () => {
               id="fullName"
               name="fullName"
               type="text"
+              required
               placeholder="Enter your Fullname"
               className="mt-2 w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
               aria-label="Full name"
@@ -105,6 +144,7 @@ const SignUp = () => {
               name="email"
               type="email"
               placeholder="you@example.com"
+              required
               className="mt-2 w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
               aria-label="Email"
             />
@@ -125,6 +165,9 @@ const SignUp = () => {
                 name="mobile"
                 type="tel"
                 placeholder="9876543210"
+                required
+                minLength={10}
+                maxLength={10}
                 className="mt-2 w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
                 aria-label="Mobile"
               />
@@ -166,6 +209,8 @@ const SignUp = () => {
               name="password"
               type="password"
               placeholder="••••••••"
+              required
+              minLength={8}
               className="mt-2 w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
               aria-label="Password"
             />
@@ -177,10 +222,12 @@ const SignUp = () => {
               disabled={loading}
               className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-sm transition disabled:opacity-60"
             >
-              {loading ? "Creating..." : "Create account"}
+              {loading ? <ClipLoader size={20}  /> : "Create account"}
             </button>
 
             <button
+              onClick={handleGoogleAuth}
+              disabled={loading}
               type="button"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 border border-gray-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-200 font-medium transition"
             >
