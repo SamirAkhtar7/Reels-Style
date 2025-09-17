@@ -1,11 +1,13 @@
 // ...existing code...
 import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import {useNavigate, Link } from "react-router-dom";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/user.slice";
 
 const SignIn = () => {
   const navigator =useNavigate();
@@ -13,6 +15,7 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   // ...existing code...
   const handleSignIn = async (e) => {
@@ -26,6 +29,8 @@ const SignIn = () => {
         { email, password },
         { withCredentials: true }
       );
+
+       dispatch(setUserData(result.data));
       console.log("Login Success:", result.data);
     } catch (err) {
       // prefer detailed server validation errors when available
@@ -58,7 +63,7 @@ const SignIn = () => {
         const firebaseResult = await signInWithPopup(auth, provider);
         const { email: firebaseEmail } = firebaseResult.user || {};
   
-        const apiResult = await axios.post(
+        const {data} = await axios.post(
           `/api/auth/user/google-auth`,
           {
           
@@ -67,8 +72,8 @@ const SignIn = () => {
           },
           { withCredentials: true }
         );
-  
-        console.log("Google SignIn Success:", apiResult.data);
+   dispatch(setUserData(data));
+        console.log("Google SignIn Success:",  data);
         navigator("/");
       } catch (err) {
         console.error("Google auth failed:", err);

@@ -1,5 +1,5 @@
 // ...existing code...
-import React from "react";
+import React, { use } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
@@ -7,7 +7,9 @@ import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";  
 
+import { setUserData } from "../redux/user.slice";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ const SignUp = () => {
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  const dispatch =useDispatch();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -30,7 +32,10 @@ const SignUp = () => {
         `/api/auth/user/register`,
         { fullName, email, password, mobile, role },
         { withCredentials: true }
+
       );
+      dispatch(setUserData(result.data));
+      
       console.log("Registration Success:", result.data);
       // navigate("/signin"); // optional: uncomment to redirect after signup
     } catch (err) {
@@ -69,7 +74,7 @@ const SignUp = () => {
       const firebaseResult = await signInWithPopup(auth, provider);
       const { displayName, email: firebaseEmail } = firebaseResult.user || {};
 
-      const apiResult = await axios.post(
+      const {data} = await axios.post(
         `/api/auth/user/google-auth`,
         {
           fullName: displayName,
@@ -79,8 +84,8 @@ const SignUp = () => {
         },
         { withCredentials: true }
       );
-
-      console.log("Google SignIn Success:", apiResult.data);
+ dispatch(setUserData(data));
+      console.log("Google SignIn Success:",data);
       navigate("/");
     } catch (err) {
       console.error("Google auth failed:", err);

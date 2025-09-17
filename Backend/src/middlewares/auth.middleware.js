@@ -29,20 +29,27 @@ exports.authFoodpartnerMiddleware = async(req, res, next) => {
 
 
 exports.authUserMiddleware = async (req, res, next) => {
-    const token = req.cookies.token;
+  try {
+    const cookies = req.cookies || {};
+    const token = cookies.token;
     if (!token) {
-        return res.status(401).json({
-            Message:"Please login first"
-        })
+      return res.status(401).json({ message: "Please login first" });
     }
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        const user = await userModel.findById(decoded.id);
-        req.user = user
-        next()
-    } catch (err) {
-        return res.status(401).json({
-            message:"Invalid token"
-        })
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const id = decoded?.id || decoded?.userId || decoded?._id;
+    if (!id) {
+      return res.status(401).json({ message: "Invalid token payload" });
     }
-}
+
+    const user = await userModel.findById(id).select("-password");
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
