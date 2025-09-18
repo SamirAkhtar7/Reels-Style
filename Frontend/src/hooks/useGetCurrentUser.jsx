@@ -12,9 +12,10 @@ const useGetCurrentUser = () => {
           withCredentials: true,
           timeout: 5000,
         });
-          
-           dispatch(setUserData(result.data));
           console.log(result);
+          const payload =
+            result.data.user ?? result.data.userData ?? result.data;
+          dispatch(setUserData(payload));
           
       } catch (err) {if (!err.response) {
         console.error("Cannot reach backend:", err.message || err);
@@ -24,7 +25,7 @@ const useGetCurrentUser = () => {
       }
     };
     fetchUser();
-  }, []);
+  }, [dispatch]);
 };
 
 export default useGetCurrentUser;
