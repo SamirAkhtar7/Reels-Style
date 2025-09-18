@@ -107,16 +107,21 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.logoutUser = async (req, res) => {
-  res.clearCookies("token");
-  res.status(200).json({ message: "User logged out successfully" });
+  // clear the auth cookie on response
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  });
+  return res.status(200).json({ message: "User logged out successfully" });
 };
 
 exports.sendOtp = async (req, res) => {
   try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { email } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -136,12 +141,12 @@ exports.sendOtp = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { email, otp } = req.body;
-    const user = await userModel.findOne({ email })
+    const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -163,10 +168,10 @@ exports.verifyOtp = async (req, res) => {
 
 exports.resetOtp = async (req, res) => {
   try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     const { email, password } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -183,37 +188,32 @@ exports.resetOtp = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: `${err}` });
   }
-}
-
+};
 
 exports.googleAuth = async (req, res) => {
   try {
-    const { fullName, email, mobile,role } = req.body;
-   let user = await userModel.findOne({ email });
+    const { fullName, email, mobile, role } = req.body;
+    let user = await userModel.findOne({ email });
     if (!user) {
-     user = await userModel.create({
+      user = await userModel.create({
         fullName,
         email,
         mobile,
-        role
-        
+        role,
       });
-
     }
     const token = await getToken(user._id);
-     res.cookie("token", token, {
-       httpOnly: true,
-       secure: process.env.NODE_ENV === "production",
-       sameSite: "Strict",
-       maxAge: 7 * 24 * 60 * 60 * 1000,
-     });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     return res.status(200).json({ message: "Google Auth successful" });
-    
   } catch (err) {
     return res.status(500).json({ message: `GoogleAuth Error:${err}` });
   }
-}
-
+};
 
 exports.registerFoodPartner = async (req, res) => {
   const { name, email, password } = req.body;
@@ -275,6 +275,12 @@ exports.loginFoodpartner = async (req, res) => {
 };
 
 exports.logoutFoodpartner = async (req, res) => {
-  res.clearCookies("token");
-  res.status(200).json({ message: "Food partner logged out successfully" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  });
+  return res
+    .status(200)
+    .json({ message: "Food partner logged out successfully" });
 };

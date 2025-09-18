@@ -24,8 +24,8 @@ router.post(
     .withMessage("Mobile must be a 10 digit number"),
   body("role")
     .optional()
-    .isIn(["user", "owner", "deleveryBoy"])
-    .withMessage("Role must be one of: user, owner, deleveryBoy"),
+    .isIn(["user", "owner", "foodDelivery"])
+    .withMessage("Role must be one of: user, owner,foodDelivery"),
   authController.register
 );
 
@@ -59,13 +59,14 @@ router.post(
   body("password")
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long"),
-    authController.resetOtp
+  authController.resetOtp
 );
 
-
-router.post("/user/google-auth", body("email").trim().isEmail().withMessage("Valid email required"),
-  authController.googleAuth);
-
+router.post(
+  "/user/google-auth",
+  body("email").trim().isEmail().withMessage("Valid email required"),
+  authController.googleAuth
+);
 
 router.get("/user/logout", authController.logoutUser);
 

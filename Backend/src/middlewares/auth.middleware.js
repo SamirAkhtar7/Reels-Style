@@ -53,3 +53,37 @@ exports.authUserMiddleware = async (req, res, next) => {
     return res.status(401).json({ message: "Invalid token" });
   }
 };
+
+
+
+
+exports.verifyToken = (req, res, next)=> {
+  try {
+    // read token from cookie or Authorization header
+    const token =
+      (req.cookies && req.cookies.token) ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+    if (!token) {
+      return res.status(401).json({ message: "No token" });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        if (err.name === "TokenExpiredError") {
+          // clear cookie if present and inform client
+          if (req.cookies && req.cookies.token) {
+            res.clearCookie("token");
+          }
+          return res.status(401).json({ message: "TokenExpired" });
+        }
+        return res.status(401).json({ message: "Invalid token" });
+      }
+
+      req.user = decoded;
+      next();
+    });
+  } catch (e) {
+    return res.status(500).json({ message: "Authentication error" });
+  }
+};

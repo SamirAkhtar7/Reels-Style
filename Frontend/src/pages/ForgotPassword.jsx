@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 
 const ForgotPassword = () => {
+
+  const { userData } = useSelector((state) => state.user);
+  console.log("User Data from Redux:", userData);
+
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
