@@ -9,13 +9,15 @@ import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import useGetCity from "../hooks/useGetCity";
+import useGetMyShop from "../hooks/useGetMyShop";
 
 const AppRoutes = () => {
   useGetCurrentUser();
   useGetCity();
+  useGetMyShop();
 
   // select the actual user object (null when not logged in)
-  const data= useSelector((state) => state.user );
+  const data= useSelector((state) => state?.user );
   // optional: keep the whole slice for debugging
   // const userSlice = useSelector((state) => state.user);
 

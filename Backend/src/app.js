@@ -7,6 +7,8 @@ const authRouters = require('./routes/auth.routes')
 const foodRouters = require("./routes/food.routes")
 const userRouters = require("./routes/user.routes");
 const { verifyToken } = require('./middlewares/auth.middleware');
+const shopRouters= require("./routes/shop.routes")
+const itemRouters = require("./routes/item.routes")
 
 const app = express()
 app.use(cookiesParser());
@@ -35,6 +37,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouters)
 app.use("/api/user", userRouters)
 app.use("/api/food", foodRouters)
+app.use("/api/shop", shopRouters)
+app.use("/api/item", itemRouters)
 
 
 

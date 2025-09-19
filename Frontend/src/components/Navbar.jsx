@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { FiSearch, FiPlus, FiUser, FiMapPin,FiShoppingCart } from "react-icons/fi";
+import { FiSearch, FiPlus, FiUser,FiClipboard , FiMapPin,FiShoppingCart } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user.slice";
+
 import axios from "axios";
 
-const Navbar = () => {
-  const {userData,city}= useSelector(state=>state.user)
 
+const Navbar = () => {
+  const { userData, city } = useSelector(state => state?.user)
+  const  myShopData  = useSelector((state) => state?.owner);
+console.log("Navbar myShopData:", myShopData);
 
   // console.log("Navbar userData:", city);
  const name = userData?.fullName;
@@ -19,7 +22,7 @@ const Navbar = () => {
   const handleLogout = async() => {
     try {
       const result= await axios.get('/api/auth/user/logout', { withCredentials: true });
-      console.log("Logout successful:", result.data);
+      console.log("Logout successful:", result?.data);
      dispatch(clearUser());
       
     } catch (error) {
@@ -50,29 +53,52 @@ const Navbar = () => {
         </div>
 
         <div className="flex-1">
-          <div className="relative max-w-md mx-auto">
-            <FiSearch className="absolute left-3 top-3 text-slate-400" />
-            <input
-              type="search"
-              placeholder="Search reels, restaurants..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              aria-label="Search"
-            />
-          </div>
+          {userData?.role == "user" && (
+            <div className="relative max-w-md mx-auto">
+              <FiSearch className="absolute left-3 top-3 text-slate-400" />
+              <input
+                type="search"
+                placeholder="Search reels, restaurants..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                aria-label="Search"
+              />
+            </div>
+          )}
         </div>
-        <div className="relative cursor-pointer">
-          <FiShoppingCart size={25} className="text-[#ff4d2d]" />
 
-          <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
-            2
-          </span>
-        </div>
+        {userData?.role == "owner" && (
+          <>
+            {myShopData && (
+              <button className=" flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-white] text-[#ff4d2d]">
+                <FiPlus size={20} />
+                <span className="">Add Food Item</span>
+              </button>
+            )}
+            {/*pendding order */}
+            <div className="relative cursor-pointer">
+              <FiClipboard size={22} className="text-[#ff4d2d]" />
+              <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
+                2
+              </span>
+            </div>
+          </>
+        )}
+
+        {userData?.role == "user" && (
+          <div className="relative cursor-pointer">
+            <FiShoppingCart size={25} className="text-[#ff4d2d]" />
+
+            <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
+              2
+            </span>
+          </div>
+        )}
         <div
           onClick={() => setShowInfo(!showInfo)}
           className=" w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-gray-100 dark:border-slate-700"
         >
           <div className="text-[#ff4d2d] dark:text-[#ff4d2d] text-lg">
-            {name.slice(0, 1)}
+            {name?.slice(0, 1)}
           </div>
         </div>
         {showInfo && (
@@ -86,8 +112,8 @@ const Navbar = () => {
             </div>
             <div
               onClick={handleLogout}
-              className="text-[#ff4d2d] cursor-pointer font-semibold">
-           
+              className="text-[#ff4d2d] cursor-pointer font-semibold"
+            >
               log Out
             </div>
           </div>

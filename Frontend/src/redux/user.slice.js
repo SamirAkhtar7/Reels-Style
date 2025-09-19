@@ -24,12 +24,12 @@ const userSlice = createSlice({
     // legacy alias for compatibility with older imports
     setUserData(state, action) {
       // state.user = action.payload ?? null;
-      state.userData = action.payload
+      state.userData = action?.payload
       //   ? "succeeded" : "idle";
       // state.error = null;
     },
     setCity: (state, actions) => {
-      state.city=actions.payload
+      state.city=actions?.payload
     },
 
     // reset to initial state
@@ -38,7 +38,7 @@ const userSlice = createSlice({
     },
 
     setError(state, action) {
-      state.error = action.payload ?? "Unknown error";
+      state.error = action?.payload ?? "Unknown error";
       state.status = "failed";
     },
   },

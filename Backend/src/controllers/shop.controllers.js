@@ -1,3 +1,4 @@
+
 const ShopModel = require("../models/shop.model");
 const { uploadOnCloudinary } = require("../services/cloudinary");
 
@@ -45,3 +46,18 @@ exports.createEditShope = async (req, res) => {
     return res.status(500).json({ message: `Create shop error ${err}` });
   }
 };
+
+exports.getShop = async (req, res) => { 
+    try {
+        const shop = await ShopModel.findOne({ ower: req.userId }).populate("ower", "-password", "itms");
+        console.log(shop);
+        if (!shop) {
+            return null
+        }
+
+        return res.status(200).json(shop)
+        
+    } catch (err) {
+        return res.status(500).json({ message: `Get shop error1 ${err}` });
+    }
+}

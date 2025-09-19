@@ -5,7 +5,7 @@ const { uploadOnCloudinary } = require("../services/cloudinary");
 const itemModel = require("../models/item.model");
 
 
-export const addItem = async (req, res) => {
+exports.addItem = async (req, res) => {
 
     try {
         const { name, catagory, foodType, price, } = req.body;
@@ -36,7 +36,7 @@ export const addItem = async (req, res) => {
 }
  
 
-export const editItem = async (req, res) => {
+exports.editItem = async (req, res) => {
     try {
         const itemId = req.params.id;
         const { name, catagory, foodType, price } = req.body;

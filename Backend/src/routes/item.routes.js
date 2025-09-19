@@ -10,4 +10,4 @@ itemRouter.post("/add-item", authMiddleware.authUserMiddleware, upload.single("i
 itemRouter.get("/edit-item", authMiddleware.authUserMiddleware, editItem)
 
 
-export default itemRouter;
+module.exports = itemRouter;
