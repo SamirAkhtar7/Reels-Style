@@ -1,25 +1,41 @@
 const cloudinary = require("cloudinary").v2;
-const fs = require('fs');
+const path = require("path");
 
-
-exports.uploadOnCloudinary =async (file) => {
-    cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY,
-    });
-
-
-    try {
-      const result = await cloudinary.uploader
-      .upload(file)
-        
-        fs.unlinkSync(file) 
-        return result.secure_url;
-    }
-    catch (err) {
-         fs.unlinkSync(file); 
-        console.log(err)
-    }
-
+function configureCloudinary() {
+  const cfg = {
+    cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
+    api_key: (process.env.CLOUDINARY_API_KEY || "").trim(),
+    api_secret: (process.env.CLOUDINARY_API_SECRET || "").trim(),
+  };
+  // only configure if all three present
+  if (cfg.cloud_name && cfg.api_key && cfg.api_secret) {
+    cloudinary.config(cfg);
+    return true;
+  }
+  return false;
 }
+
+const hasCreds = configureCloudinary();
+
+async function uploadOnCloudinary(filePath, filename) {
+  // if no creds -> return local uploads URL
+  if (!hasCreds) {
+    const fname = filename || path.basename(filePath);
+    return `/uploads/${fname}`;
+  }
+
+  try {
+    const res = await cloudinary.uploader.upload(filePath, { folder: "shops" });
+    return res.secure_url || res.url;
+  } catch (err) {
+    console.error(
+      "Cloudinary upload failed:",
+      err && err.message ? err.message : err
+    );
+    // fallback to local uploads path if upload fails
+    const fname = filename || path.basename(filePath);
+    return `/uploads/${fname}`;
+  }
+}
+
+module.exports = { uploadOnCloudinary, configureCloudinary };

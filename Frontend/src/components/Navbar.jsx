@@ -8,7 +8,7 @@ import axios from "axios";
 
 const Navbar = () => {
   const { userData, city } = useSelector(state => state?.user)
-  const  myShopData  = useSelector((state) => state?.owner);
+  const  myShopData  = useSelector((state) => state?.owner?.myShopData);
 console.log("Navbar myShopData:", myShopData);
 
   // console.log("Navbar userData:", city);

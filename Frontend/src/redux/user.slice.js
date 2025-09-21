@@ -11,7 +11,9 @@ const userSlice = createSlice({
   name: "user",
   initialState: {
     userData: null,
-    city:null
+    city: null,
+    state: null,
+    address: null,
   },
   reducers: {
     // set user payload (canonical)
@@ -32,7 +34,13 @@ const userSlice = createSlice({
       state.city=actions?.payload
     },
 
-    // reset to initial state
+    setState: (state, actions) => {
+      state.state=actions?.payload
+    },
+    setAddress: (state, actions) => {
+      state.address = actions?.payload
+      // reset to initial state
+    },
     clearUser() {
       return { ...initialState };
     },
@@ -49,6 +57,6 @@ export const selectCurrentUser = (state) => state.user?.user ?? null;
 export const selectUserStatus = (state) => state.user?.status ?? "idle";
 export const selectUserError = (state) => state.user?.error ?? null;
 
-export const { setUser, setUserData, clearUser, setError,setCity } = userSlice.actions;
+export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress} = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...
