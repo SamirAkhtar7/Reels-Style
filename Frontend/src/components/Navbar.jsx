@@ -11,7 +11,7 @@ const Navbar = () => {
   const  myShopData  = useSelector((state) => state?.owner?.myShopData);
 console.log("Navbar myShopData:", myShopData);
 
-  // console.log("Navbar userData:", city);
+
  const name = userData?.fullName;
 
  
