@@ -15,7 +15,7 @@ const CreateEditeShop = () => {
   //   console.log("City from Redux:", city);
   //   console.log("State from Redux:", state);
 
-  const [name, setName] = useState("");
+  const [name, setName] = useState(myShopData?.name || "");
  
   const [Address, setAddress] = useState(address ||"");
   const [City, setCity] = useState( city || "");
@@ -86,7 +86,7 @@ console.log("myShopData", myShopData);
             <FaUtensils className="w-16 h-16 text-[#ff4d2d] ]" />
           </div>
           <div className="text-3xl font-extrabold text-gray-900">
-            {myShopData.shop ? "Edit Shop" : "Create Shop"}
+            {myShopData ? "Edit Shop" : "Create Shop"}
           </div>
         </div>
 
@@ -102,7 +102,7 @@ console.log("myShopData", myShopData);
               type="text"
               className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
               placeholder="Enter your shop name"
-              defaultValue={myShopData?.shopName || ""}
+              defaultValue={myShopData?.name || ""}
             />
           </div>
 
@@ -172,7 +172,7 @@ console.log("myShopData", myShopData);
           >
             {loading
               ? "Loading..."
-              : myShopData.shop
+              : myShopData
               ? "Update Shop"
               : "Create Shop"}
           </button>
