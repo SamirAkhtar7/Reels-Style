@@ -1,10 +1,10 @@
-// import axios from "axios"
+import axios from "axios";
 
-// const axiosIntance = axios.create({
-//     baseURL: import.meta.env.VITE_API_URL,
-   
-// })
+const baseURL = import.meta.env.VITE_API_URL || ""; // '' => uses same origin (Vite proxy)
+const instance = axios.create({
+  baseURL,
+  withCredentials: true, // send cookies
+  timeout: 10000,
+});
 
-
-
-// export default axiosIntance
+export default instance;

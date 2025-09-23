@@ -81,7 +81,7 @@ exports.createEditShope = async (req, res) => {
         new: true,
       });
 
-      await shop.populate("owner", "-password");
+      await shop.populate("owner items");
 
       return res.status(200).json({
         message: "Shop updated successfully",

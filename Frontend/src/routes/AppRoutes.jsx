@@ -11,6 +11,7 @@ import Home from "../pages/Home";
 import useGetCity from "../hooks/useGetCity";
 import useGetMyShop from "../hooks/useGetMyShop";
 import CreateEditeShop from "../pages/CreateEditeShop";
+import AddItems from "../pages/AddItems";
 
 const AppRoutes = () => {
   useGetCurrentUser();
@@ -46,6 +47,10 @@ const AppRoutes = () => {
         <Route
           path="/create-edit-shop"
           element={user ? <CreateEditeShop /> : <Navigate to={"/signin"} />}
+        />
+        <Route
+          path="/add-items"
+          element={user ? <AddItems /> : <Navigate to={"/signin"} />}
         />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>

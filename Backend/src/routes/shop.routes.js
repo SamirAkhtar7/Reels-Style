@@ -6,9 +6,9 @@ const { upload } = require("../middlewares/multer");
 
 const shopRouter = express.Router();
 
+shopRouter.get("/get-shop", authMiddleware.authUserMiddleware,getShop)
 shopRouter.post("/create-edit-shop", authMiddleware.authUserMiddleware,upload.single("image"),createEditShope)
 
-shopRouter.get("/get-shop", authMiddleware.authUserMiddleware,getShop)
 
 
 
