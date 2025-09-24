@@ -76,7 +76,13 @@ exports.addItem = async (req, res) => {
     shop.items = shop.items || [];
     shop.items.push(item._id);
     await shop.save();
-    await shop.populate("items owner");
+
+    // populate owner and items correctly
+    await shop.populate("owner", "-password");
+    await shop.populate({
+      path: "items",
+      options: { sort: { createdAt: -1 } },
+    });
     return res
       .status(201)
       .json({ message: "Item added successfully", item, shop });
@@ -123,8 +129,14 @@ exports.editItem = async (req, res) => {
       new: true,
     });
     if (!item) return res.status(404).json({ message: "Item not found" });
+    const shop = await ShopModel.findById(item.shop).populate({
+      path: "items",
+      options: { sort: { createdAt: -1 } },
+    });
+    if (!shop)
+      return res.status(404).json({ message: "Shop not found for item" });
 
-    return res.status(200).json({ message: "Item updated successfully", item });
+    return res.status(200).json({ message: "Item updated successfully",shop});
   } catch (err) {
     console.error("Edit item error:", err);
     return res.status(500).json({
@@ -152,3 +164,29 @@ exports.getItemById =async (req, res) => {
   }
 }
 
+
+exports.deleteItem = async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const item =await ItemModel.findByIdAndDelete(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    const shop  = await ShopModel.findById(item.shop)
+    shop.items= shop.items.filter(i => i !== item._id)
+    await shop.save()
+    await shop.populate({
+      path: "items",
+      options: { sort: { createdAt: -1 } },
+    })
+    return res.status(200).json({ message: "Item deleted successfully" ,shop});
+  
+    
+}
+  catch (err) {
+    console.error("Delete item error:", err);
+    return res.status(500).json({
+      message: `Delete item error ${err && err.message ? err.message : err}`,
+    });
+  }
+}

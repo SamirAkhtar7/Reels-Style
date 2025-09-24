@@ -81,7 +81,10 @@ exports.createEditShope = async (req, res) => {
         new: true,
       });
 
-      await shop.populate("owner items");
+      await shop.populate("owner").populate({
+        path: "items",
+        options: { sort: { createdAt: -1 } },
+      });
 
       return res.status(200).json({
         message: "Shop updated successfully",

@@ -15,9 +15,9 @@ const EditItems = () => {
   const { id } = useParams();
 
   const [name, setName] = useState( "");
-  const [price, setPrice] = useState(currentItem?.price || "");
-  const [category, setCategory] = useState(currentItem?.category || "");
-  const [foodType, setFoodType] = useState(currentItem?.foodType || "");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("");
+  const [foodType, setFoodType] = useState("");
   const categories = [
     "Breakfast",
     "Lunch",

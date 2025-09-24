@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { FiSearch, FiPlus, FiUser,FiClipboard , FiMapPin,FiShoppingCart } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user.slice";
+import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const { userData, city } = useSelector(state => state?.user)
   const  myShopData  = useSelector((state) => state?.owner?.myShopData);
 // console.log("Navbar myShopData:", myShopData);
@@ -69,9 +71,13 @@ const Navbar = () => {
         {userData?.role == "owner" && (
           <>
             {myShopData && (
-              <button className=" flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-white] text-[#ff4d2d]">
+              <button
+                onClick={() => {
+                  navigate("/add-items");
+                }}
+                className=" flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-white] text-[#ff4d2d]">
                 <FiPlus size={20} />
-                <span className="">Add Food Item</span>
+                <span className=" hidden md:block lg:block">Add Food Item</span>
               </button>
             )}
             {/*pendding order */}
@@ -104,12 +110,14 @@ const Navbar = () => {
         {showInfo && (
           <div className=" fixed top-[80px] right-[10px] md:right-[10%] lg:right-[25%] w-[180Px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[99]">
             <div className="text-[17px] font-semibold ">{name}</div>
-            <div
-              className="cursor-pointer font-semibold
+            {userData?.role == "user" && (
+              <div
+                className="cursor-pointer font-semibold
           "
-            >
-              My Orders
-            </div>
+              >
+                My Orders
+              </div>
+            )}
             <div
               onClick={handleLogout}
               className="text-[#ff4d2d] cursor-pointer font-semibold"

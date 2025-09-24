@@ -38,7 +38,7 @@ const AddItems = () => {
 
   const [frontendImage, setFrontendImage] = useState(null);
   const [bankendImage, setBackendImage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState();
 
   const dispatch = useDispatch();
 
@@ -78,6 +78,9 @@ const AddItems = () => {
 
       console.log("items successfully:", response.data.shop);
       setLoading(false);
+      navigate('/');
+
+
     } catch (error) {
       console.log("Error in adding items:", error);
       setLoading(false);

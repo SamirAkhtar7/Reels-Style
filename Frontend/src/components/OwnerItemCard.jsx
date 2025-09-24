@@ -3,9 +3,33 @@ import React from "react";
 import { FaTrashAlt } from "react-icons/fa";
 import { FaPen } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import axios from "axios";
+import { setMyShopData } from "../redux/ownerSlice";
+
 
 const OwnerItemCard = ({ data, ...rest }) => {
   const navigator = useNavigate();
+  const dispatch = useDispatch();
+
+
+
+
+    const handleDeleteItem = async () => {
+      try {
+    
+        const response = await axios.get(`/api/item/delete-item/${data._id}`, {
+          withCredentials: true,
+        });
+        
+        console.log("Item deleted successfully:", response.data);
+        dispatch(setMyShopData(response?.data))
+        // Optionally, you can refresh the item list or update the state here
+      } catch (error) {
+        console.error("Error deleting item:", error);
+  }
+  
+    }
   // support either <OwnerItemCard data={item} /> or <OwnerItemCard {...item} />
   const item = data ?? rest;
   const {
@@ -42,7 +66,7 @@ const OwnerItemCard = ({ data, ...rest }) => {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={()=>navigator(`/edit-item/${_id}`)}
+              onClick={() => navigator(`/edit-item/${_id}`)}
               aria-label="edit item"
               className="p-2 rounded-full hover:bg-gray-100"
             >
@@ -51,7 +75,7 @@ const OwnerItemCard = ({ data, ...rest }) => {
 
             <button
               type="button"
-              onClick={() => onDelete && onDelete(item)}
+              onClick={handleDeleteItem}
               aria-label="delete item"
               className="p-2 rounded-full hover:bg-gray-100"
             >

@@ -61,6 +61,7 @@ console.log("myShopData", myShopData);
 
       console.log("Shop successfully:", response.data.shop);
       setLoading(false);
+      navigate("/");
       
     }
     catch (error) {
