@@ -132,3 +132,23 @@ exports.editItem = async (req, res) => {
     });
   }
 };
+
+
+exports.getItemById =async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const item = await ItemModel.findById(itemId)
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" })
+    }
+    return res.status(200).json({ item })
+  }
+  catch (err) {
+    console.error("Get item by ID error:", err);
+    return res.status(500).json({
+      message: `Get item by ID error ${err && err.message ? err.message : err}`,
+    });
+
+  }
+}
+

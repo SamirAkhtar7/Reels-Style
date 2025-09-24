@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { FaUtensils } from "react-icons/fa6";
+import { useParams } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,10 +11,13 @@ const EditItems = () => {
   const navigate = useNavigate();
   const { myShopData } = useSelector((state) => state.owner);
 
-  const [name, setName] = useState(myShopData?.name || "");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Breakfast");
-  const [foodType, setFoodType] = useState("Veg");
+  const [currentItem, setCurrentItem] = useState(null);
+  const { id } = useParams();
+
+  const [name, setName] = useState( "");
+  const [price, setPrice] = useState(currentItem?.price || "");
+  const [category, setCategory] = useState(currentItem?.category || "");
+  const [foodType, setFoodType] = useState(currentItem?.foodType || "");
   const categories = [
     "Breakfast",
     "Lunch",
@@ -36,15 +40,45 @@ const EditItems = () => {
     "others",
   ];
 
-  const [frontendImage, setFrontendImage] = useState(null);
+  const [frontendImage, setFrontendImage] = useState(
+    currentItem?.image || null
+  );
   const [bankendImage, setBackendImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
-  console.log("myShopData", myShopData);
+  //   console.log("myShopData", myShopData);
 
   // console.log("myShopData1234", Address,City,State);
+  useEffect(() => {
+    const handleGetItemById = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/item/get-item/${id}`, {
+          withCredentials: true,
+        });
+
+        const item = response?.data?.item ?? null;
+        console.log("item:", item.name);
+        setCurrentItem(item);
+
+        // initialize controlled inputs from fetched item
+        setName(item?.name);
+        setPrice(item?.price ?? "");
+        setCategory(item?.category ?? "");
+        setFoodType(item?.foodType ?? "");
+        setFrontendImage(item?.image ?? null);
+      } catch (error) {
+        console.log("Error in getting item:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) handleGetItemById();
+  }, [id]);
+
   const handleImages = (e) => {
     // guard against undefined event (won't be called without an event when set correctly)
     const file = e?.target?.files?.[0];
@@ -60,24 +94,22 @@ const EditItems = () => {
       setLoading(true);
       const formData = new FormData();
       formData.append("name", name);
-       formData.append("category", category);
-       formData.append("foodType", foodType);
-       formData.append("price", price);
-        
+      formData.append("category", category);
+      formData.append("foodType", foodType);
+      formData.append("price", price);
 
       if (bankendImage) {
         formData.append("image", bankendImage);
       }
-      const response = await axios.post(
-        `/api/item/add-item`,
-        formData,
-        { withCredentials: true }
-      );
+      const response = await axios.post(`/api/item/edit-item/${id}`, formData, {
+        withCredentials: true,
+      });
 
       dispatch(setMyShopData(response?.data));
 
       console.log("items successfully:", response.data.shop);
       setLoading(false);
+      navigate("/");
     } catch (error) {
       console.log("Error in adding items:", error);
       setLoading(false);
@@ -114,6 +146,7 @@ const EditItems = () => {
               onChange={(e) => {
                 setName(e.target.value);
               }}
+              value ={name}
               type="text"
               className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
               placeholder="Enter Food name"
@@ -185,10 +218,10 @@ const EditItems = () => {
             >
               <option value="" disabled>
                 Select Food Type
-                          </option>
-                          
-                <option value="veg">Veg</option>
-                <option value="non-veg">Non-Veg</option>
+              </option>
+
+              <option value="veg">Veg</option>
+              <option value="non-veg">Non-Veg</option>
             </select>
           </div>
 
