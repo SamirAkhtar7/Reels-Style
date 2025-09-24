@@ -12,6 +12,7 @@ import useGetCity from "../hooks/useGetCity";
 import useGetMyShop from "../hooks/useGetMyShop";
 import CreateEditeShop from "../pages/CreateEditeShop";
 import AddItems from "../pages/AddItems";
+import EditItems from "../pages/EditItems";
 
 const AppRoutes = () => {
   useGetCurrentUser();
@@ -51,6 +52,10 @@ const AppRoutes = () => {
         <Route
           path="/add-items"
           element={user ? <AddItems /> : <Navigate to={"/signin"} />}
+        />
+        <Route
+          path="/edit-item/:id"
+          element={user ? < EditItems/> : <Navigate to={"/signin"} />}
         />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>

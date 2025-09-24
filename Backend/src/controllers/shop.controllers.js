@@ -109,7 +109,7 @@ exports.getShop = async (req, res) => {
     const shop = await ShopModel.findOne({ owner: ownerId }).populate(
       "owner",
       "-password"
-    );
+    ).populate("items");
 
     if (!shop) {
       return res.status(404).json({ message: "Shop not found" });

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { FaUtensils } from "react-icons/fa6";
 import { FaPen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import OwnerItemCard from "./OwnerItemCard";
 
 const OwnerDashboard = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const OwnerDashboard = () => {
 
   console.log("OwnerDashboard myShopData:", myShopData);
   return (
-    <div className = 'w-screen h-screen overflow-x-hidden '>
+    <div className="w-screen h-screen overflow-x-hidden ">
       <Navbar />
       {!myShopData && (
         <div className="flex justify-center items-center p-4 sm:p-6">
@@ -98,6 +99,17 @@ const OwnerDashboard = () => {
           )}
         </>
       )}
+
+      {myShopData?.items?.length > 0 && (
+        <div className="mt-10 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {myShopData.items.map((item) => (
+              <OwnerItemCard data={item} key={item._id} />
+            ))}
+          </div>
+        </div>
+      )}
+      {/* <OwnerItemCard data={myShopData?.items} /> */}
     </div>
   );
 };
