@@ -31,6 +31,20 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* // ...shop  */}
+      <div className="w-full max-w-6xl flex flex-col gap-5 justify-center  items-center">
+        <h1 className="text-3xl text-gray-800  sm:text-3xl">
+          Popular Restaurants in your area
+        </h1>
+
+        
+
+
+
+
+
+      </div>
     </div>
   );
 };

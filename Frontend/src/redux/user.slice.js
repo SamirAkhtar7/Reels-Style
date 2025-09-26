@@ -14,6 +14,7 @@ const userSlice = createSlice({
     city: null,
     state: null,
     address: null,
+    ShopByCity:null
   },
   reducers: {
     // set user payload (canonical)
@@ -26,20 +27,23 @@ const userSlice = createSlice({
     // legacy alias for compatibility with older imports
     setUserData(state, action) {
       // state.user = action.payload ?? null;
-      state.userData = action?.payload
+      state.userData = action?.payload;
       //   ? "succeeded" : "idle";
       // state.error = null;
     },
     setCity: (state, actions) => {
-      state.city=actions?.payload
+      state.city = actions?.payload;
     },
 
     setState: (state, actions) => {
-      state.state=actions?.payload
+      state.state = actions?.payload;
     },
     setAddress: (state, actions) => {
-      state.address = actions?.payload
+      state.address = actions?.payload;
       // reset to initial state
+    },
+    setShopByCity: (state, actions) => {
+      state.ShopByCity = actions?.payload;
     },
     clearUser() {
       return { ...initialState };
@@ -57,6 +61,6 @@ export const selectCurrentUser = (state) => state.user?.user ?? null;
 export const selectUserStatus = (state) => state.user?.status ?? "idle";
 export const selectUserError = (state) => state.user?.error ?? null;
 
-export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress} = userSlice.actions;
+export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress,setShopByCity} = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...

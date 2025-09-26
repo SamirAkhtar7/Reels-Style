@@ -13,11 +13,13 @@ import useGetMyShop from "../hooks/useGetMyShop";
 import CreateEditeShop from "../pages/CreateEditeShop";
 import AddItems from "../pages/AddItems";
 import EditItems from "../pages/EditItems";
+import useGetShopByCity from "../hooks/useGetShopByCity";
 
 const AppRoutes = () => {
   useGetCurrentUser();
   useGetCity();
   useGetMyShop();
+  useGetShopByCity();
 
   // select the actual user object (null when not logged in)
   const data= useSelector((state) => state?.user );

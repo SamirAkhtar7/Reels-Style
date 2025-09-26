@@ -129,3 +129,32 @@ exports.getShop = async (req, res) => {
   }
 };
 // ...existing code...
+
+
+
+exports.getShopByCity = async (req, res) => {
+  try {
+    const city = req.params.city;
+
+    if (!city) {
+      return res.state(400).json({ message: "City parameter is required" });
+    }
+
+    const shops = await ShopModel.find({
+      city: {
+      $regex: new RegExp(`^${city}$`, "i") // case-insensitive exact match
+      }
+    }).populate('items')
+    if(!shops || shops.length === 0) {
+      return res.status(404).json({ message: "No shops found in this city" });
+    }
+    return res.status(200).json({ shops });
+
+   }
+  catch (err) { 
+    console.error("Get shop by city error:", err);
+    return res.status(500).json({
+      message: `Get shop by city error ${err && err.message ? err.message : err}`,
+    });
+  }
+}
