@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+*{
+
+    /* ya scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+::-webkit-scrollbar {
+    display: none;
+}
+@media (min-width: 320px) {
+  /* 2 columns at >= 320px */
+  .cols-2-320 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 425px) {
+  /* 3 columns at >= 425px */
+  .cols-3-425 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
