@@ -1,6 +1,7 @@
 // ...existing code...
 import { createSlice } from "@reduxjs/toolkit";
 
+
 const initialState = {
   user: null,
   status: "idle",
@@ -14,7 +15,8 @@ const userSlice = createSlice({
     city: null,
     state: null,
     address: null,
-    ShopByCity:null
+    ShopByCity: null,
+    itemsByCity: null,
   },
   reducers: {
     // set user payload (canonical)
@@ -45,6 +47,9 @@ const userSlice = createSlice({
     setShopByCity: (state, actions) => {
       state.ShopByCity = actions?.payload;
     },
+    setItemsByCity: (state, actions) => {
+      state.itemsByCity = actions?.payload;
+    },
     clearUser() {
       return { ...initialState };
     },
@@ -61,6 +66,6 @@ export const selectCurrentUser = (state) => state.user?.user ?? null;
 export const selectUserStatus = (state) => state.user?.status ?? "idle";
 export const selectUserError = (state) => state.user?.error ?? null;
 
-export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress,setShopByCity} = userSlice.actions;
+export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress,setShopByCity,setItemsByCity } = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...
