@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
-*{
-
-    /* ya scroll */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+* {
+  /* ya scroll */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 @media (min-width: 320px) {
   /* 2 columns at >= 320px */
@@ -20,5 +19,25 @@
   /* 3 columns at >= 425px */
   .cols-3-425 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Adjust FoodCard sizing for small/mobile widths (<= 425px) */
+@media (max-width: 425px) {
+  .food-card {
+    width: 160px; /* narrower card width on mobile */
+  }
+  .food-card-img {
+    height: 120px; /* shorter image area on mobile */
+  }
+}
+
+/* optional: tighten spacing a bit on very small screens (<=320px) */
+@media (max-width: 320px) {
+  .food-card {
+    width: 140px;
+  }
+  .food-card-img {
+    height: 110px;
   }
 }

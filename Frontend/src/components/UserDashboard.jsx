@@ -3,7 +3,8 @@ import React from "react";
 import Navbar from "./Navbar";
 
 import categories from "../category.js";
-import CategoryCard from "./CategoryCard";
+import FoodCard from "./FoodCard";
+import Card from "./Card";
 import { useSelector } from "react-redux";
 
 const UserDashboard = () => {
@@ -25,17 +26,10 @@ const UserDashboard = () => {
         </h1>
 
         <div className="w-full p-2">
-          <div
-            className="rounded-3xl
-            grid grid-cols-1
-            cols-2-320 cols-3-425
-          md:flex gap-4 md:flex-nowrap items-center
-          lg:flex lg:flex-nowrap
-          overflow-x-auto pb-2 pl-4 pr-4 scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth"
-          >
+          <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Category card container */}
             {categories.map((cat, index) => (
-              <CategoryCard data={cat} key={cat.category ?? index} />
+              <Card data={cat} key={cat.category ?? index} />
             ))}
           </div>
         </div>
@@ -49,17 +43,10 @@ const UserDashboard = () => {
 
         {/* shop container */}
         <div className="w-full p-2">
-          <div
-            className="rounded-3xl
-            grid grid-cols-1
-            cols-2-320 cols-3-425
-          md:flex gap-4 md:flex-nowrap items-center
-          lg:flex lg:flex-nowrap
-          overflow-x-auto pb-2 pl-4 pr-4 scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth"
-          >
+          <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Shops card container */}
             {ShopByCity?.shops?.map((shop, index) => (
-              <CategoryCard data={shop} key={index} />
+              <Card data={shop} key={index} />
             ))}
           </div>
         </div>
@@ -71,17 +58,10 @@ const UserDashboard = () => {
           Popular Items in your area
         </h1>
         <div className="w-full p-2">
-          <div
-            className="rounded-3xl
-            grid grid-cols-1
-            cols-2-320 cols-3-425
-          md:flex gap-4 md:flex-nowrap items-center
-          lg:flex lg:flex-nowrap
-          overflow-x-auto pb-2 pl-4 pr-4 scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth"
-          >
+          <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Items card container */}
             {itemsByCity?.items?.map((item, index) => (
-              <CategoryCard data={item} key={index} />
+              <FoodCard props={item} key={index} />
             ))}
           </div>
         </div>
