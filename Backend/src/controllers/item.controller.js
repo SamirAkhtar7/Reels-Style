@@ -190,3 +190,27 @@ exports.deleteItem = async (req, res) => {
     });
   }
 }
+
+exports.getItemByCity = async (req, res) => {
+  try {
+    const city = req.params.city;
+    if(!city){
+      return res.status(400).json({ message: "City parameter is required" });
+    }
+    const shops = await ShopModel.find({city}).populate( "items");
+    if (!shops || shops.length === 0) {
+      return res.status(404).json({ message: "No shops found in this city" });
+    }
+    
+    const items = shops.flatMap(shop => shop.items);
+    return res.status(200).json({ items });
+    
+   }
+  catch (err) {
+    console.error("Get item by city error:", err);
+    return res.status(500).json({
+      message: `Get item by city error ${err && err.message ? err.message : err}`,
+    });
+  }
+  
+}

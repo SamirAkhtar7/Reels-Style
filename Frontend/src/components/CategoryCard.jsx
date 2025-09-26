@@ -6,7 +6,7 @@ const CategoryCard = ({data}) => {
           <img src={data.image} alt={data.category} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out" />
           
           <div className='absolute bottom-2 left-2 bg-[#ffffff96] bg-opacity-95 px-3 py-1  rounded-t-xl  text-sm  text-center font-medium text-gray-800 backdrop-blur md:text-base'>
-              {data.category}
+              {data.category||data.name}
           </div>
 
     </div>
