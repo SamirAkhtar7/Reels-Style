@@ -3,27 +3,75 @@ import { useState } from "react";
 import { FaShoppingBag, FaShoppingCart } from "react-icons/fa";
 import { FaDrumstickBite, FaLeaf, FaMinus, FaPlus } from "react-icons/fa6";
 import { FcRating } from "react-icons/fc";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../redux/user.slice";
 
 const FoodCard = ({ props }) => {
-    const [quantity, setQuantity] = useState(0);
+  const dispatch = useDispatch();
 
-    const renderStars = (rating) => {
+  const [quantity, setQuantity] = useState(0);
+
+  const handleIncrement = () => {
+    const newQty = quantity + 1;
+    setQuantity(newQty);
+    dispatch(
+      addToCart({
+        id: props._id ?? props.id,
+        name: props.name,
+        price: props.price,
+        image: props.image,
+        quantity: newQty,
+        foodType: props.foodType,
+        shop: props.shop,
+      })
+    );
+  };
+
+  const handleDecrement = () => {
+    if (quantity === 0) return;
+    const newQty = quantity - 1;
+    setQuantity(newQty);
+    dispatch(
+      addToCart({
+        id: props._id ?? props.id,
+        name: props.name,
+        price: props.price,
+        image: props.image,
+        quantity: newQty,
+        foodType: props.foodType,
+        shop: props.shop,
+      })
+    );
+  };
+
+  const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const halfStar = rating % 1 >= 0.5;
-        const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<span key={`full-${i}`} className="text-yellow-400">★</span>);
+      stars.push(
+        <span key={`full-${i}`} className="text-yellow-400">
+          ★
+        </span>
+      );
     }
     if (halfStar) {
-      stars.push(<span key="half" className="text-yellow-400">☆</span>);
-        }
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<span key={`empty-${i}`} className="text-gray-300">★</span>);
+      stars.push(
+        <span key="half" className="text-yellow-400">
+          ☆
+        </span>
+      );
     }
-        return stars;
-        
-}
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <span key={`empty-${i}`} className="text-gray-300">
+          ★
+        </span>
+      );
+    }
+    return stars;
+  };
 
   return (
     <div
@@ -60,16 +108,20 @@ const FoodCard = ({ props }) => {
       <div className="flex mt-auto justify-between items-center w-full px-3 pb-3 gap-3">
         <span className="font-bold text-gray-900 text-lg ">{props.price}</span>
         <div className="flex items-center border rounded-full overflow-hidden shadow-sm ">
-          <button onClick={() => setQuantity(quantity - 1)} disabled={quantity === 0} className="ml-2 disabled:cursor-not-allowed">
+          <button
+            onClick={handleDecrement}
+            disabled={quantity === 0}
+            className="ml-2 disabled:cursor-not-allowed"
+          >
             <FaMinus size={12} />
           </button>
           <span className="px-3">{quantity}</span>
-          <button onClick={() => setQuantity(quantity + 1)} className="mr-2">
+          <button onClick={handleIncrement} className="mr-2">
             <FaPlus size={12} />
-                  </button>
-                  <button className="bg-[#ff4d2d] py-2 px-3  text-white hover:bg-[#e04326] transition-colors">
-                      <FaShoppingCart  />
-                  </button>
+          </button>
+          <button className="bg-[#ff4d2d] py-2 px-3  text-white hover:bg-[#e04326] transition-colors">
+            <FaShoppingCart />
+          </button>
         </div>
       </div>
     </div>
