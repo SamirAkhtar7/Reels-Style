@@ -5,11 +5,14 @@ import { FaDrumstickBite, FaLeaf, FaMinus, FaPlus } from "react-icons/fa6";
 import { FcRating } from "react-icons/fc";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../redux/user.slice";
+import { useSelector } from "react-redux";
 
 const FoodCard = ({ props }) => {
   const dispatch = useDispatch();
+  const {cartItems} = useSelector((state) => state.user);
+  console.log(cartItems);
 
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState(cartItems.find(i=>i.id===props._id)?.quantity || 0);
 
   const handleIncrement = () => {
     const newQty = quantity + 1;
@@ -119,7 +122,9 @@ const FoodCard = ({ props }) => {
           <button onClick={handleIncrement} className="mr-2">
             <FaPlus size={12} />
           </button>
-          <button className="bg-[#ff4d2d] py-2 px-3  text-white hover:bg-[#e04326] transition-colors">
+          <button
+            className={` ${cartItems.some(i=>i.id===props._id)?"bg-gray-800":"bg-[#ff4d2d]"} py-2 px-3  text-white hover:bg-[#e04326] transition-colors`}
+          >
             <FaShoppingCart />
           </button>
         </div>

@@ -9,9 +9,11 @@ import axios from "axios";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { userData, city } = useSelector(state => state?.user)
+  const { userData, city ,cartItems} = useSelector(state => state?.user)
   const  myShopData  = useSelector((state) => state?.owner?.myShopData);
 // console.log("Navbar myShopData:", myShopData);
+
+console.log("Navbar userData cartItem: ",cartItems);
 
 
  const name = userData?.fullName;
@@ -91,11 +93,12 @@ const Navbar = () => {
         )}
 
         {userData?.role == "user" && (
-          <div className="relative cursor-pointer">
+          <div onClick={() => navigate("/cart")}
+           className="relative cursor-pointer">
             <FiShoppingCart size={25} className="text-[#ff4d2d]" />
 
             <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
-              2
+              {cartItems?.length}
             </span>
           </div>
         )}

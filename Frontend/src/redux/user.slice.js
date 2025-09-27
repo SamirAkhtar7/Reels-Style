@@ -1,7 +1,6 @@
 // ...existing code...
 import { createSlice } from "@reduxjs/toolkit";
 
-
 const initialState = {
   user: null,
   status: "idle",
@@ -18,6 +17,7 @@ const userSlice = createSlice({
     ShopByCity: null,
     itemsByCity: null,
     cartItems: [],
+    totalAmount: 0,
   },
   reducers: {
     // set user payload (canonical)
@@ -53,18 +53,36 @@ const userSlice = createSlice({
     },
     addToCart: (state, actions) => {
       const cartItem = actions?.payload;
-      const existingItem = state.cartItems.find(i => i.id == cartItem.id)
+      const existingItem = state.cartItems.find((i) => i.id == cartItem.id);
+      if (Number(cartItem.quantity) === 0) {
+        state.cartItems = state.cartItems.filter((i) => i.id != cartItem.id);
+        return;
+      }
       if (existingItem) {
         existingItem.quantity = cartItem.quantity;
-      }
-      else {
+      } else {
         state.cartItems.push(cartItem);
       }
-console.log(state.cartItems); 
+      console.log(state.cartItems);
+      state.totalAmount = state.cartItems.reduce((sum, i)=> sum + i.price * i.quantity,0) 
     },
-    // setCartItems: (state, actions) => {
-    //   state.cartItems = actions?.payload;
-    // },
+   updateQuantity: (state, actions)=>{
+     const { id, quantity } = actions.payload;
+     const  item = state.cartItems.find((i) => i.id === id);
+
+     if (item) {
+       item.quantity = quantity;
+     }
+   
+    if(item.quantity == 0 ){
+      state.cartItems = state.cartItems.filter((i) => i.id !== id);
+      return;
+    }
+    state.totalAmount = state.cartItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0
+    ); 
+   },
     clearUser() {
       return { ...initialState };
     },
@@ -81,6 +99,18 @@ export const selectCurrentUser = (state) => state.user?.user ?? null;
 export const selectUserStatus = (state) => state.user?.status ?? "idle";
 export const selectUserError = (state) => state.user?.error ?? null;
 
-export const { setUser, setUserData, clearUser, setError,setCity ,setState,setAddress,setShopByCity,setItemsByCity,addToCart } = userSlice.actions;
+export const {
+  setUser,
+  setUserData,
+  clearUser,
+  setError,
+  setCity,
+  setState,
+  setAddress,
+  setShopByCity,
+  setItemsByCity,
+  updateQuantity,
+  addToCart,
+} = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...

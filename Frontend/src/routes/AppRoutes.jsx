@@ -15,20 +15,24 @@ import AddItems from "../pages/AddItems";
 import EditItems from "../pages/EditItems";
 import useGetShopByCity from "../hooks/useGetShopByCity";
 import useGetItemsByCity from "../hooks/useGetItemsByCity";
+import CartPage from "../pages/CartPage";
 
 const AppRoutes = () => {
+  const { userData, city } = useSelector((state) => state?.user);
   useGetCurrentUser();
+
   useGetCity();
-  useGetMyShop();
   useGetShopByCity();
   useGetItemsByCity();
 
+  useGetMyShop();
+
   // select the actual user object (null when not logged in)
-  const data= useSelector((state) => state?.user );
+  const data = useSelector((state) => state?.user);
   // optional: keep the whole slice for debugging
   // const userSlice = useSelector((state) => state.user);
 
- const user =data.userData
+  const user = data.userData;
 
   return (
     <Router>
@@ -59,7 +63,12 @@ const AppRoutes = () => {
         />
         <Route
           path="/edit-item/:id"
-          element={user ? < EditItems/> : <Navigate to={"/signin"} />}
+          element={user ? <EditItems /> : <Navigate to={"/signin"} />}
+        />
+
+        <Route
+          path="/cart"
+          element={user ? <CartPage /> : <Navigate to={"/signin"} />}
         />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>
