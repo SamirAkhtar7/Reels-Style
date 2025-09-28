@@ -16,6 +16,7 @@ import EditItems from "../pages/EditItems";
 import useGetShopByCity from "../hooks/useGetShopByCity";
 import useGetItemsByCity from "../hooks/useGetItemsByCity";
 import CartPage from "../pages/CartPage";
+import CheckOut from "../pages/CheckOut";
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -69,6 +70,10 @@ const AppRoutes = () => {
         <Route
           path="/cart"
           element={user ? <CartPage /> : <Navigate to={"/signin"} />}
+        />
+        <Route
+          path="/checkout"
+          element={user ? <CheckOut /> : <Navigate to={"/signin"} />}
         />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>

@@ -6,9 +6,9 @@ import { useSelector } from "react-redux";
 import CartItemCard from "../components/CartItemCard";
 
 const CartPage = () => {
-    const navigate = useNavigate();
-    const {cartItems,totalAmount} = useSelector((state) => state?.user);
-    console.log(cartItems);
+  const navigate = useNavigate();
+  const { cartItems, totalAmount } = useSelector((state) => state?.user);
+  console.log(cartItems);
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 p-6">
@@ -32,23 +32,28 @@ const CartPage = () => {
           <p className="text-center text-2xl font-bold text-gray-900">
             Your cart is empty
           </p>
-        ) : (<>
-         <div className=" flex flex-col gap-4">
-                {cartItems?.map((item,index)=>(
-                    <CartItemCard key={index} props={item}/>
-                ))}          
-          </div>
-        <div className="mt-6 bg-white p-4 rounded-xl shadow flex justify-between items-center border">
-         <h1> Totel Amount : </h1>
-         <span>₹ {totalAmount}</span>
-        </div>
-        <div className=" mt-4">
-            <button className=" w-full bg-[#ff4d2d] text-white p-3 rounded-xl font-semibold">
+        ) : (
+          <>
+            <div className=" flex flex-col gap-4">
+              {cartItems?.map((item, index) => (
+                <CartItemCard key={index} props={item} />
+              ))}
+            </div>
+            <div className="mt-6 bg-white p-4 rounded-xl shadow flex justify-between items-center border">
+              <h1> Totel Amount : </h1>
+              <span>₹ {totalAmount}</span>
+            </div>
+            <div className=" mt-4">
+              <button
+                onClick={() => navigate("/checkout")}
+                disabled={cartItems?.lenght === 0}
+                className=" w-full bg-[#ff4d2d] text-white p-3 rounded-xl font-semibold"
+              >
                 Checkout Now
-            </button>
-        </div>
-       </> )}
-
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
