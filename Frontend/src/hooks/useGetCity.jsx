@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { setAddress, setState } from "../redux/user.slice";
-import { setLocation , setDAddress} from "../redux/mapSlice";
+import { setLocation , setDeliveryAddress} from "../redux/mapSlice";
 
 
 function useGetCity() {
@@ -33,8 +33,9 @@ function useGetCity() {
 
             dispatch({ type: "user/setCity", payload: cityName })
             dispatch(setState(result?.data?.features[0].properties.state))
-            dispatch(setDAddress(address))
+         
             dispatch(setAddress(address))
+            dispatch(setDeliveryAddress(address))
 
         })
 

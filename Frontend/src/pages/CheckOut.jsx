@@ -15,7 +15,7 @@ const CheckOut = () => {
    
   const navigate = useNavigate();
   
-  const { location, dAddress } = useSelector((state) => state.map);
+  const { location, deliveryAddress } = useSelector((state) => state.map);
 
     
 
@@ -57,7 +57,7 @@ const CheckOut = () => {
           </h2>
           <div className="flex gap-2 mb-3">
             <input
-              value={dAddress ?? "Selected location"}
+              value={deliveryAddress ?? "Selected location"}
               placeholder="Enter your address..."
               className="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d2d]"
               type="text"
@@ -82,7 +82,7 @@ const CheckOut = () => {
                     attribution="&copy; OpenStreetMap contributors"
                   />
                   <Marker position={center}>
-                    <Popup>{dAddress ?? "Selected location"}</Popup>
+                    <Popup>{deliveryAddress ?? "Selected location"}</Popup>
                   </Marker>
                 </MapContainer>
               ) : (
