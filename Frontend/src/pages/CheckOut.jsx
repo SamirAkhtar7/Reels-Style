@@ -31,6 +31,7 @@ const CheckOut = () => {
   const { location, deliveryAddress } = useSelector((state) => state.map);
   const {cartItems,totalAmount} = useSelector((state) => state.user)
   const [addressInput, setAddressInput] = useState("");
+  const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("COD");
    
     const deliveryCharge = totalAmount >= 500 ? 0 : 40; ; // Fixed delivery charge
@@ -87,6 +88,48 @@ const CheckOut = () => {
     }
   };
 
+
+  const handlePlaceOrder = async () => { 
+      if (!addressInput || !addressInput.trim()) {
+        alert("Please enter a complete delivery address.");
+        return;
+    }
+      if (
+        !location ||
+        typeof location.latitude !== "number" ||
+        typeof location.longitude !== "number"
+      ) {
+        alert(
+          "Please select a delivery location on the map or use current location."
+        );
+        return;
+      }
+    try {
+      setLoading(true);
+       const payload = {
+         paymentMethod,
+         deliveryAddress: {
+           text: addressInput,
+           latitude: location.latitude,
+           longitude: location.longitude,
+         },
+         cartItems,
+         totalAmount: AmountPayable,
+       };
+      const result = await axios.post(
+        `/api/order/place-order`,
+        payload,
+        { withCredentials: true }
+      );
+      
+      console.log("Oder placed successfully:",result.data);
+      setLoading(false);
+     }
+    catch (error) {
+      console.error("Error placing order:", error);
+      setLoading(false);
+    }
+  }
   // use numeric latitude/longitude from your map slice (latitude / longitude)
   const hasCoords =
     location &&
@@ -261,10 +304,11 @@ const CheckOut = () => {
             </div>
             <div>
               <button
-                
+                onClick={handlePlaceOrder}
+                disabled={loading}
                 className="w-full bg-[#ff4d2d] text-white p-3 rounded-xl font-semibold"
               >
-               { paymentMethod === "COD" ? "Place Order" : "Pay Now"}
+                {loading ? "Processing..." :( paymentMethod === "COD"  ? "Place Order" : "Pay Now")}
               </button>
             </div>
           </div>

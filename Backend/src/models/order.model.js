@@ -1,4 +1,5 @@
-const mongoose= require('mongoose');
+const mongoose = require("mongoose");
+
 
  
 const shopOrderItemSchema = new mongoose.Schema({
@@ -19,6 +20,10 @@ const shopOrderItemSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ["Veg", "Non-Veg"],
+  },
+    name: {
+        type: String,
+        required: true,
     },
 
 });
@@ -40,6 +45,7 @@ const shopOrderSchema = new mongoose.Schema(
         type: Number,
 
     },
+    
         shopOrderItems: [
             shopOrderItemSchema
         
@@ -50,8 +56,6 @@ const shopOrderSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-
 
 
 const orderSchema = new mongoose.Schema(
@@ -89,4 +93,4 @@ const orderSchema = new mongoose.Schema(
 
 
 const Order = mongoose.model("Order", orderSchema);
-export default Order; 
+module.exports =Order; 
