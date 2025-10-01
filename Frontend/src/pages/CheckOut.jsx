@@ -124,6 +124,8 @@ const CheckOut = () => {
       
       console.log("Oder placed successfully:",result.data);
       setLoading(false);
+      navigate("/order-placed");
+      
      }
     catch (error) {
       console.error("Error placing order:", error);
