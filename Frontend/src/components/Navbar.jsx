@@ -114,7 +114,7 @@ console.log("Navbar userData cartItem: ",cartItems);
           <div className=" fixed top-[80px] right-[10px] md:right-[10%] lg:right-[25%] w-[180Px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[99]">
             <div className="text-[17px] font-semibold ">{name}</div>
             {userData?.role == "user" && (
-              <div
+              <div onClick={() => navigate("/my-orders")}
                 className="cursor-pointer font-semibold
           "
               >

@@ -18,6 +18,7 @@ import useGetItemsByCity from "../hooks/useGetItemsByCity";
 import CartPage from "../pages/CartPage";
 import CheckOut from "../pages/CheckOut";
 import OrderPlaced from "../pages/OrderPlaced";
+import MyOrder from "../pages/MyOrder";
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -80,6 +81,11 @@ const AppRoutes = () => {
         <Route
           path="/order-placed"
           element={user ? <OrderPlaced /> : <Navigate to={"/signin"} />}
+        />
+
+        <Route
+          path="/my-orders"
+          element={user ? <MyOrder /> : <Navigate to={"/signin"} />}
         />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>

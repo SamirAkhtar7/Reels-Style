@@ -1,5 +1,7 @@
 const OrderModelImport = require("../models/order.model");
 const OrderModel = OrderModelImport.default || OrderModelImport;
+const ShopModelImport = require("../models/shop.model");
+const ShopModel = ShopModelImport.default || ShopModelImport;
 
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
@@ -20,6 +22,16 @@ exports.placeOrder = async (req, res) => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ message: "Cart items are required" });
     }
+
+    // Gather shop ids from cart to fetch owners
+    const shopIds = Array.from(
+      new Set(cartItems.map((it) => String(it.shop || null)).filter(Boolean))
+    );
+    const shops =
+      shopIds.length > 0
+        ? await ShopModel.find({ _id: { $in: shopIds } }).select("owner")
+        : [];
+    const shopOwnerMap = new Map(shops.map((s) => [String(s._id), s.owner]));
 
     // compute totals if not provided or to protect against tampering
     const computedSubtotal = cartItems.reduce(
@@ -44,7 +56,13 @@ exports.placeOrder = async (req, res) => {
       const shopId = it.shop || null;
       const shopEntry = shopMap.get(shopId) || {
         Shop: shopId,
-        owner: it.shopOwner || it.owner || null,
+        // prefer actual shop.owner from DB, fallback to any owner info in item
+        owner:
+          shopOwnerMap.get(String(shopId)) ||
+          it.shopOwner ||
+          it.owner ||
+          it.ownerId ||
+          null,
         subtotal: 0,
         shopOrderItems: [],
       };
@@ -87,3 +105,45 @@ exports.placeOrder = async (req, res) => {
     });
   }
 };
+
+// GET my-orders
+
+exports.getUserOrders = async (req, res) => {
+  try {
+    const user = req.user || null;
+    if (!user) {
+      return res.status(401).json({ message: "Please login first" });
+    }
+    const orders = await OrderModel.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate("user", "-password")
+      .populate("shopOrder.Shop", "name")
+      .populate("shopOrder.owner", "name email mobile ")
+      .populate("shopOrder.shopOrderItems.item", "name image price foodType");
+
+    return res.status(200).json({ orders });
+  } catch (err) {
+    console.error("Get my orders error:", err);
+    return res.status(500).json({ message: "Get my orders error" });
+  }
+};
+
+
+exports.getOwnerOrders = async (req, res)=>{
+    try {   
+        const owner = req.userId || null;
+        if(!owner){
+            return res.status(401).json({message: "Please login first"});
+        }
+        const orders = await OrderModel.find({'shopOrder.owner': owner})
+        .sort({createdAt: -1})
+        .populate("user", "-password")
+        .populate("shopOrder.Shop", "name")
+        .populate("shopOrder.shopOrderItems.item", "name image price foodType");
+        return res.status(200).json({orders});
+
+    }catch(err){
+        console.error("Get owner orders error:", err);
+        return res.status(500).json({message: "Get owner orders error"});
+    }
+}
