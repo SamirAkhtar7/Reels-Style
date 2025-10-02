@@ -14,7 +14,7 @@ const MyOrder = () => {
 
   return (
     <div className="w-full min-h-screen bg-white flex justify-center p-6">
-      <div className="relative w-full max-w-[800px] bg-gray-100 p-6 rounded-lg">
+      <div className="relative w-full max-w-[800px] bg-gray-50 p-6 rounded-lg">
         <div className="flex items-center gap-4 mb-6">
           <div
             onClick={() => {

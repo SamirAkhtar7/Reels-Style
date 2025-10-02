@@ -2,9 +2,9 @@ import react from 'react'
 
 const OwnerOrderCard = ({order}) => {
 
-    retrun (
+    return (
         <div>
-        
+        Owner Order Card
     </div>
     )
 }
