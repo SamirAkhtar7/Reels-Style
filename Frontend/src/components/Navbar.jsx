@@ -83,7 +83,9 @@ const Navbar = () => {
               </button>
             )}
             {/*pendding order */}
-            <div className="relative cursor-pointer">
+            <div 
+            onClick={() => navigate("/my-orders")}
+           className="relative cursor-pointer">
               <FiClipboard size={22} className="text-[#ff4d2d]" />
               <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
                 2
