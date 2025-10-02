@@ -22,7 +22,7 @@ function useGetItemsByCity() {
                     }
                     
                 );
-                    console.log("Items by city data:", response.data)
+                    // console.log("Items by city data:", response.data)
                     dispatch(setItemsByCity(response.data))
                     
                 }catch (error) {

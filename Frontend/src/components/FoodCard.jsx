@@ -10,7 +10,7 @@ import { useSelector } from "react-redux";
 const FoodCard = ({ props }) => {
   const dispatch = useDispatch();
   const {cartItems} = useSelector((state) => state.user);
-  console.log(cartItems);
+  //console.log(cartItems);
 
   const [quantity, setQuantity] = useState(cartItems.find(i=>i.id===props._id)?.quantity || 0);
 

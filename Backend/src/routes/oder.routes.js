@@ -12,15 +12,11 @@ router.post(
   orderController.placeOrder
 );
 router.get(
-  "/my-orders",
+  "/get-my-orders",
   authMiddleware.authUserMiddleware,
   orderController.getUserOrders
 );
-router.get(
-  "/owner-orders",
-  authMiddleware.authFoodpartnerMiddleware,
-  orderController.getOwnerOrders
-);
+
  
 
 module.exports = router;

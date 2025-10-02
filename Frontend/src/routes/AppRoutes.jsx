@@ -19,6 +19,7 @@ import CartPage from "../pages/CartPage";
 import CheckOut from "../pages/CheckOut";
 import OrderPlaced from "../pages/OrderPlaced";
 import MyOrder from "../pages/MyOrder";
+import useGetMyOrder from "../hooks/useGetMyOrder";
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -28,7 +29,9 @@ const AppRoutes = () => {
   useGetShopByCity();
   useGetItemsByCity();
 
+
   useGetMyShop();
+  useGetMyOrder()
 
   // select the actual user object (null when not logged in)
   const data = useSelector((state) => state?.user);

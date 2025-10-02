@@ -26,7 +26,7 @@ function useGetCity() {
                 //    const latitude = 27.0253032;
                 //    const longitude = 75.8926484;
             const result = await axios.get(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${import.meta.env.VITE_GEOAPIKEY}`)
-            console.log("City Data:", result?.data);
+            // console.log("City Data:", result?.data);
             const cityName = result.data.features[0].properties.city;       
             const address = `${result?.data?.features[0].properties.address_line1}, ${
               result?.data?.features[0].properties.address_line2}`

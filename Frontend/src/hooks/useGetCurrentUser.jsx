@@ -12,7 +12,7 @@ const useGetCurrentUser = () => {
           withCredentials: true,
           timeout: 5000,
         });
-          console.log(result);
+          // console.log(result);
           const payload =
             result.data.user ?? result.data.userData ?? result.data;
           dispatch(setUserData(payload));

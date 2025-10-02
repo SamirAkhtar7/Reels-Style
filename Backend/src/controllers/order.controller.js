@@ -1,7 +1,11 @@
 const OrderModelImport = require("../models/order.model");
 const OrderModel = OrderModelImport.default || OrderModelImport;
 const ShopModelImport = require("../models/shop.model");
+const UserModelImport = require("../models/user.model");
+const ItemModelImport = require("../models/item.model");
+const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
+const ItemModel = ItemModelImport.default || ItemModelImport;
 
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
@@ -110,40 +114,54 @@ exports.placeOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const user = req.user || null;
+    // support both auth middleware shapes: req.user (object) or req.userId (id)
+    let user = null;
+    if (req.user && req.user._id) {
+      // req.user may already be populated user doc by middleware
+      user = req.user;
+    } else if (req.userId) {
+      user = await UserModel.findById(req.userId).select("-password");
+    }
+
     if (!user) {
       return res.status(401).json({ message: "Please login first" });
     }
-    const orders = await OrderModel.find({ user: user._id })
-      .sort({ createdAt: -1 })
-      .populate("user", "-password")
-      .populate("shopOrder.Shop", "name")
-      .populate("shopOrder.owner", "name email mobile ")
-      .populate("shopOrder.shopOrderItems.item", "name image price foodType");
 
-    return res.status(200).json({ orders });
+    if (user.role === "user") {
+      const orders = await OrderModel.find({ user: user._id })
+        .sort({ createdAt: -1 })
+        .populate({ path: "user", model: UserModel, select: "-password" })
+        .populate("shopOrder.Shop", "name")
+        .populate({
+          path: "shopOrder.owner",
+          model: UserModel,
+          select: "name email mobile",
+        })
+        // populate the product field inside shopOrder.shopOrderItems
+        .populate({
+          path: "shopOrder.shopOrderItems.product",
+          model: ItemModel,
+          select: "name image price foodType",
+        });
+
+      return res.status(200).json({ orders });
+    } else if (user.role === "owner") {
+      const owner = user._id;
+      const orders = await OrderModel.find({ "shopOrder.owner": owner })
+        .sort({ createdAt: -1 })
+        .populate({ path: "user", model: UserModel, select: "-password" })
+        .populate("shopOrder.Shop", "name")
+        .populate({
+          path: "shopOrder.shopOrderItems.product",
+          model: ItemModel,
+          select: "name image price foodType",
+        });
+      return res.status(200).json({ orders });
+    }
+
+    return res.status(400).json({ message: "Invalid user role" });
   } catch (err) {
     console.error("Get my orders error:", err);
     return res.status(500).json({ message: "Get my orders error" });
   }
 };
-
-
-exports.getOwnerOrders = async (req, res)=>{
-    try {   
-        const owner = req.userId || null;
-        if(!owner){
-            return res.status(401).json({message: "Please login first"});
-        }
-        const orders = await OrderModel.find({'shopOrder.owner': owner})
-        .sort({createdAt: -1})
-        .populate("user", "-password")
-        .populate("shopOrder.Shop", "name")
-        .populate("shopOrder.shopOrderItems.item", "name image price foodType");
-        return res.status(200).json({orders});
-
-    }catch(err){
-        console.error("Get owner orders error:", err);
-        return res.status(500).json({message: "Get owner orders error"});
-    }
-}

@@ -21,7 +21,7 @@ function useGetShopByCity() {
                       }
                     );
                     dispatch(setShopByCity(response.data))
-                      console.log("Shop by city data:", response.data);  
+                      //console.log("Shop by city data:", response.data);  
                 } catch (error) {
                     console.error("Error fetching shop by city:", error);
                 }
