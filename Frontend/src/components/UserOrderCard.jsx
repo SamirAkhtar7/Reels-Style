@@ -1,60 +1,124 @@
 import React from "react";
+import PropTypes from "prop-types";
+
+/**
+ * Robust UserOrderCard
+ * - merges shopOrder entries by Shop id so same shop is shown once
+ * - supports populated product (item.product) or denormalized item.name/price/image
+ * - safe fallbacks for missing data
+ */
+
+ const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "N/A");
+
+const mergeShopOrderEntries = (shopOrder = []) => {
+  return Object.values(
+    (shopOrder || []).reduce((acc, entry) => {
+      const shopId = String(
+        entry?.Shop?._id ?? entry?.Shop ?? `__no_shop_${Math.random()}`
+      );
+      if (!acc[shopId]) {
+        acc[shopId] = {
+          Shop: entry.Shop,
+          subtotal: Number(entry.subtotal || 0),
+          shopOrderItems: Array.isArray(entry.shopOrderItems)
+            ? [...entry.shopOrderItems]
+            : [],
+        };
+      } else {
+        acc[shopId].subtotal =
+          (acc[shopId].subtotal || 0) + Number(entry.subtotal || 0);
+        acc[shopId].shopOrderItems.push(...(entry.shopOrderItems || []));
+      }
+      return acc;
+    }, {})
+  );
+};
+
+const SafeImg = ({ src, alt }) => {
+  const fallback =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'><rect width='100%' height='100%' fill='%23f3f4f6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='12'>No image</text></svg>";
+  return (
+    <img
+      src={src || fallback}
+      alt={alt || "image"}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        e.currentTarget.src = fallback;
+      }}
+    />
+  );
+};
 
 const UserOrderCard = ({ order }) => {
   if (!order) return null;
+
+  const merged = mergeShopOrderEntries(order.shopOrder);
 
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
       <div className="flex justify-between border-b pb-2">
         <div>
           <p className="font-semibold text-start">
-            Order #{String(order?._id ?? "").slice(-6)}
+            Order #{String(order._id ?? "").slice(-6) || "N/A"}
           </p>
           <p className="text-sm text-gray-500">
-            Date:{" "}
-            {order?.createdAt
-              ? new Date(order.createdAt).toLocaleString()
-              : "N/A"}
+            Date: {formatDate(order.createdAt)}
           </p>
         </div>
 
         <div className="text-end">
           <p className="font-semibold">
-            {(order?.paymentMethod ?? "").toUpperCase()}
+            {(order.paymentMethod ?? "").toUpperCase()}
           </p>
           <p className="text-sm text-gray-500">
             Status:{" "}
             <span className="text-rose-600 font-semibold">
-              {order?.status ?? "N/A"}
+              {order.status ?? "N/A"}
             </span>
           </p>
         </div>
       </div>
 
-      <div>
-        {Array.isArray(order?.shopOrder) && order.shopOrder.length > 0 ? (
-          order.shopOrder.map((shopEntry, idx) => {
+      <div className="space-y-4">
+        {merged.length === 0 ? (
+          <div className="text-sm text-gray-500">No shops in this order</div>
+        ) : (
+          merged.map((shopEntry, idx) => {
             const shopName = shopEntry?.Shop?.name ?? "Shop Name";
             return (
               <div
-                className="border rounded-lg p-3 bg-[#fffaf7] space-y-2"
-                key={shopEntry._id ?? idx}
+                className="border rounded-lg p-3 bg-[#fffaf7] space-y-3"
+                key={shopEntry.Shop?._id ?? `shop-${idx}`}
               >
                 <p className="font-medium">{shopName}</p>
 
-                {Array.isArray(shopEntry?.shopOrderItems) &&
+                {Array.isArray(shopEntry.shopOrderItems) &&
                 shopEntry.shopOrderItems.length > 0 ? (
                   shopEntry.shopOrderItems.map((it, i) => {
-                    const itemName = it?.name ?? it?.product?.name ?? "Item";
+                    // support both shapes: populated product object or plain fields on item
+                    const product = it?.product ?? {};
+                    const img =
+                      it?.product?.image ?? it?.image ?? product?.image ?? "";
+                    const title =
+                      it?.name ?? product?.name ?? it?.productName ?? "Item";
+                    const qty = it?.quantity ?? 0;
+                    const price = it?.price ?? it?.product?.price ?? 0;
+
                     return (
                       <div
-                        className="flex justify-between text-sm"
-                        key={it._id ?? it.product?._id ?? i}
+                        className="flex justify-between items-center text-sm"
+                        key={it._id ?? product?._id ?? `item-${i}`}
                       >
-                        <div className="truncate">{itemName}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-white">
+                            <SafeImg src={img} alt={title} />
+                          </div>
+                          <div className="truncate font-semibold">{title}</div>
+                        </div>
+
                         <div className="text-right text-gray-700">
-                          <div>Qty: {it.quantity}</div>
-                          <div>₹{it.price}</div>
+                          <div>Qty: {qty}</div>
+                          <div>₹{price}</div>
                         </div>
                       </div>
                     );
@@ -64,17 +128,31 @@ const UserOrderCard = ({ order }) => {
                 )}
 
                 <div className="text-right font-semibold">
-                  Subtotal: ₹{shopEntry?.subtotal ?? 0}
+                  Subtotal: ₹{shopEntry.subtotal ?? 0}
                 </div>
               </div>
             );
           })
-        ) : (
-          <div className="text-sm text-gray-500">No shops in this order</div>
         )}
       </div>
     </div>
   );
 };
+
+// UserOrderCard.propTypes = {
+//   order: PropTypes.shape({
+//     _id: PropTypes.string,
+//     createdAt: PropTypes.string,
+//     paymentMethod: PropTypes.string,
+//     status: PropTypes.string,
+//     shopOrder: PropTypes.arrayOf(
+//       PropTypes.shape({
+//         Shop: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+//         subtotal: PropTypes.number,
+//         shopOrderItems: PropTypes.arrayOf(PropTypes.object),
+//       })
+//     ),
+//   }),
+// };
 
 export default UserOrderCard;
