@@ -8,7 +8,7 @@ import PropTypes from "prop-types";
  * - safe fallbacks for missing data
  */
 
- const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "N/A");
+const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "N/A");
 
 const mergeShopOrderEntries = (shopOrder = []) => {
   return Object.values(
@@ -109,11 +109,13 @@ const UserOrderCard = ({ order }) => {
                         className="flex justify-between items-center text-sm"
                         key={it._id ?? product?._id ?? `item-${i}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-white">
+                        <div className="flex items-center border p-2 flex-col rounded-2xl  gap-2  border-gray-200 bg-white ">
+                          <div className="w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 g-white">
                             <SafeImg src={img} alt={title} />
                           </div>
-                          <div className="truncate font-semibold">{title}</div>
+                          <div className="truncate font-semibold">
+                            <p>{title}</p>
+                          </div>
                         </div>
 
                         <div className="text-right text-gray-700">
@@ -134,6 +136,22 @@ const UserOrderCard = ({ order }) => {
             );
           })
         )}
+      </div>
+      <div>
+        <div className="border-t pt-2 " />
+
+        <div className="text-sm text-gray-500">
+          <button className="px-4 py-2 bg-[#ff4d2d] text-white rounded hover:bg-rose-600 transition mt-2">
+            Track Order
+          </button>
+        </div>
+        <div className="text-right font-bold text-lg">
+          Total: ₹
+          {merged.reduce(
+            (acc, entry) => acc + (Number(entry.subtotal) || 0),
+            0
+          )}
+        </div>
       </div>
     </div>
   );
