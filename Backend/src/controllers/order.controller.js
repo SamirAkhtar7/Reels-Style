@@ -146,7 +146,7 @@ exports.getUserOrders = async (req, res) => {
 
       return res.status(200).json({ orders });
     } else if (user.role === "owner") {
-      const owner = user._id;
+      const owner = String(user._id);
       const orders = await OrderModel.find({ "shopOrder.owner": owner })
         .sort({ createdAt: -1 })
         .populate({ path: "user", model: UserModel, select: "-password" })
@@ -156,7 +156,20 @@ exports.getUserOrders = async (req, res) => {
           model: ItemModel,
           select: "name image price foodType",
         });
-      return res.status(200).json({ orders });
+
+      // Keep only shopOrder entries that belong to this owner and return those orders
+      const ownerOrders = orders
+        .map((order) => {
+          const o = order.toObject ? order.toObject() : order;
+          const shopOrderForOwner = (o.shopOrder || []).filter(
+            (s) => String(s.owner?._id ?? s.owner) === owner
+          );
+          if (!shopOrderForOwner.length) return null;
+          return { ...o, shopOrder: shopOrderForOwner };
+        })
+        .filter(Boolean);
+
+      return res.status(200).json({ orders: ownerOrders });
     }
 
     return res.status(400).json({ message: "Invalid user role" });
