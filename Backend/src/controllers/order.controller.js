@@ -97,6 +97,17 @@ exports.placeOrder = async (req, res) => {
 
     const order = await OrderModel.create(orderPayload);
 
+    // populate and await so client gets populated order immediately
+    await order.populate([
+      {
+        path: "shopOrder.shopOrderItems.product",
+        model: ItemModel,
+        select: "name image price",
+      },
+      { path: "shopOrder.Shop", select: "name" },
+      { path: "user", model: UserModel, select: "-password" },
+    ]);
+
     return res
       .status(201)
       .json({ message: "Order placed successfully", order });

@@ -1,23 +1,21 @@
-// ...existing code...
-import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import {useNavigate, Link } from "react-router-dom";
-import { auth } from "../../firebase";
-import { ClipLoader } from "react-spinners";
 import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "../config/axios";
+import { auth } from "../../firebase";
 import { setUserData } from "../redux/user.slice";
+import { ClipLoader } from "react-spinners";
 
 const SignIn = () => {
-  const navigator =useNavigate();
+  const navigator = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
-  // ...existing code...
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError("");
@@ -30,7 +28,11 @@ const SignIn = () => {
         { withCredentials: true }
       );
 
-       dispatch(setUserData(result.data));
+      const payload = result.data?.user ?? result.data;
+      dispatch(setUserData(payload));
+      // navigate after store update so Home reads new user immediately
+      navigator("/", { replace: true });
+    setTimeout(() => window.location.reload(), 100);
       console.log("Login Success:", result.data);
     } catch (err) {
       // prefer detailed server validation errors when available
@@ -55,33 +57,29 @@ const SignIn = () => {
     }
   };
 
-    const handleGoogleAuth = async () => {
-     
-  
-      const provider = new GoogleAuthProvider();
-      try {
-        const firebaseResult = await signInWithPopup(auth, provider);
-        const { email: firebaseEmail } = firebaseResult.user || {};
-  
-        const {data} = await axios.post(
-          `/api/auth/user/google-auth`,
-          {
-          
-            email: firebaseEmail,
-            
-          },
-          { withCredentials: true }
-        );
-   dispatch(setUserData(data));
-        console.log("Google SignIn Success:",  data);
-        navigator("/");
-      } catch (err) {
-        console.error("Google auth failed:", err);
-        setError(
-          err.response?.data?.message || err.message || "Google sign-in failed"
-        );
-      }
-    };
+  const handleGoogleAuth = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const firebaseResult = await signInWithPopup(auth, provider);
+      const { email: firebaseEmail } = firebaseResult.user || {};
+
+      const { data } = await axios.post(
+        `/api/auth/user/google-auth`,
+        {
+          email: firebaseEmail,
+        },
+        { withCredentials: true }
+      );
+      dispatch(setUserData(data));
+      console.log("Google SignIn Success:", data);
+      navigator("/");
+    } catch (err) {
+      console.error("Google auth failed:", err);
+      setError(
+        err.response?.data?.message || err.message || "Google sign-in failed"
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
@@ -91,7 +89,8 @@ const SignIn = () => {
             vingo
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Sign in to your account to get started with delicious food deliveries
+            Sign in to your account to get started with delicious food
+            deliveries
           </p>
         </header>
 
@@ -144,9 +143,11 @@ const SignIn = () => {
           </div>
 
           <div
-            onClick={()=>{navigator("/forgotpassword")}}
-            className="text-right mb-4 text-sm text-rose-500 hover:underline dark:text-slate-300">
-         
+            onClick={() => {
+              navigator("/forgotpassword");
+            }}
+            className="text-right mb-4 text-sm text-rose-500 hover:underline dark:text-slate-300"
+          >
             Forgot password
           </div>
 
@@ -182,4 +183,3 @@ const SignIn = () => {
 };
 
 export default SignIn;
-
