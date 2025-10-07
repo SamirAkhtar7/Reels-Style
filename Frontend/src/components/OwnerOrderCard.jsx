@@ -1,6 +1,8 @@
 import React from "react";
 import { MdPhone } from "react-icons/md";
-
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { updateOrderStatus } from "../redux/user.slice";
 /**
  * OwnerOrderCard
  * - Renders order details for owners
@@ -25,8 +27,25 @@ const SafeImg = ({ src, alt }) => {
 };
 
 const OwnerOrderCard = ({ order }) => {
+  const dispatch = useDispatch();
   console.log(" OrderCard order:", order);
   if (!order) return null;
+
+
+  const handleUpdateStatus = async (orderId, shopId, status) => {
+    try {
+      const response = await axios.post(`/api/order/update-order-status/${orderId}/${shopId}`, { status }, { withCredentials: true });
+      console.log("status update response:", response.data);  
+      dispatch(updateOrderStatus({ orderId, shopId, status }))
+
+
+    } catch (err) {
+      console.error("Update status error:", err);
+    }
+  
+  
+}
+
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
@@ -112,7 +131,7 @@ const OwnerOrderCard = ({ order }) => {
           <div>
             <span className="text-md ">
               status:
-              <span className=" font-semibold capitalize text-[#ff4d2d]">
+              <span className=" ml-1 font-semibold capitalize text-[#ff4d2d]">
                 {order?.status}
               </span>
             </span>
@@ -120,21 +139,28 @@ const OwnerOrderCard = ({ order }) => {
 
           <div>
             <select
-              value={order?.status}
+              onChange={(e) =>
+                handleUpdateStatus(
+                  order._id,
+                  order.shopOrder[0].Shop._id,
+                  e.target.value
+                )
+              }
+              // value={order?.status}
               className="rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             >
+              <option value="">Change</option>
               <option value="Pending">Pending</option>
-              <option value="Accepted">Accepted</option>
-              <option value="Preparing">Preparing</option>
-              <option value="Out for delivery">Out for delivery</option>
+              {/* <option value="Accepted">Accepted</option> */}
+              <option value="Prepared">Prepared</option>
+              <option value="Out of delivery">Out of delivery</option>
             </select>
           </div>
-              </div>
-              
+        </div>
       </div>
-        <div className="text-right font-bold text-lg">
-                  Total: ₹{order?.totalAmount ?? 0}
-          </div>
+      <div className="text-right font-bold text-lg">
+        Total: ₹{order?.totalAmount ?? 0}
+      </div>
     </div>
   );
 };

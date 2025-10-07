@@ -204,17 +204,19 @@ exports.updateOrderStatus = async (req, res) => {
     } 
 
     // Find the specific shopOrder entry for the given shopId
-    const shopOrder = await shopOrder.find(o => o.shop == shopId);
+    const shopOrder = await order.shopOrder.find(o => o.Shop == shopId);
     if (!shopOrder) {
       return res.status(404).json({ message: "Shop order not found in this order" });
     }
 
     // Update the status of the specific shopOrder entry
-    shopOrder.status = status || shopOrder.status;
+    order.status = status ;
+   
     await order.save();
-    await shopOrder.populate("shopOrderItems.product", "name image price foodType");
+   // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
 
-    return res.status(200).json({ message: "Order status updated", order });  
+    
+    return res.status(200).json(order.status );  
 
     
   } catch (err) {
