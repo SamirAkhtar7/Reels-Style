@@ -3,6 +3,7 @@ const OrderModel = OrderModelImport.default || OrderModelImport;
 const ShopModelImport = require("../models/shop.model");
 const UserModelImport = require("../models/user.model");
 const ItemModelImport = require("../models/item.model");
+const Order = require("../models/order.model");
 const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
@@ -189,3 +190,35 @@ exports.getUserOrders = async (req, res) => {
     return res.status(500).json({ message: "Get my orders error" });
   }
 };
+
+
+//Update order status - owner only
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { orderId, shopId } = req.params;
+    const { status } = req.body;
+
+    const order = await OrderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    } 
+
+    // Find the specific shopOrder entry for the given shopId
+    const shopOrder = await shopOrder.find(o => o.shop == shopId);
+    if (!shopOrder) {
+      return res.status(404).json({ message: "Shop order not found in this order" });
+    }
+
+    // Update the status of the specific shopOrder entry
+    shopOrder.status = status || shopOrder.status;
+    await order.save();
+    await shopOrder.populate("shopOrderItems.product", "name image price foodType");
+
+    return res.status(200).json({ message: "Order status updated", order });  
+
+    
+  } catch (err) {
+    console.error("Update order status error:", err);
+    return res.status(500).json({ message: "Update order status error" });
+  }
+ }
