@@ -1,33 +1,29 @@
 const mongoose = require("mongoose");
 
-
- 
 const shopOrderItemSchema = new mongoose.Schema({
-    product: {
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Item",
-        required: true,
-    },
-    quantity: {
-        type: Number,
-        required: true,
-    },
-    price: {
-        type: Number,
-        required: true, 
-    },
-    foodType: {
-        type: String,
-        required: true,
-        enum: ["Veg", "Non-Veg"],
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Item",
+    required: true,
   },
-    name: {
-        type: String,
-        required: true,
-    },
-
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  foodType: {
+    type: String,
+    required: true,
+    enum: ["Veg", "Non-Veg"],
+  },
+  name: {
+    type: String,
+    required: true,
+  },
 });
-
 
 const shopOrderSchema = new mongoose.Schema(
   {
@@ -36,27 +32,29 @@ const shopOrderSchema = new mongoose.Schema(
       ref: "Shop",
       required: true,
     },
-        owner: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    subtotal:
-    {
-        type: Number,
+    subtotal: {
+      type: Number,
+    },
+
+    shopOrderItems: [shopOrderItemSchema],
+
+    assigned: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DeliveryAssignment",
+      default: null,
 
     },
-    
-        shopOrderItems: [
-            shopOrderItemSchema
-        
-    ]
 
   },
+
   {
     timestamps: true,
   }
 );
-
 
 const orderSchema = new mongoose.Schema(
   {
@@ -100,9 +98,5 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-
-
-
-
 const Order = mongoose.model("Order", orderSchema);
-module.exports =Order; 
+module.exports = Order;
