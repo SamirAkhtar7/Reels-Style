@@ -10,6 +10,12 @@ router.get(
   userController.getUsers
 );
 
+router.post(
+  "/update-location",
+  authMiddleware.authUserMiddleware,
+  userController.updateUserLocation
+);
+
 
 
 
