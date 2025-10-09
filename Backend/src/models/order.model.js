@@ -42,7 +42,7 @@ const shopOrderSchema = new mongoose.Schema(
 
     shopOrderItems: [shopOrderItemSchema],
 
-    assigned: {
+    assignment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DeliveryAssignment",
       default: null,

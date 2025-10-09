@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
+      select: false, // do not return password field by default
     },
     mobile: {
       type: String,

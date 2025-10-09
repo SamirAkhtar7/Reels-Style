@@ -1,4 +1,5 @@
 
+const mongoose = require("mongoose");
 
 const deliveryAssignmentSchema = new mongoose.Schema(
     {
@@ -29,7 +30,7 @@ const deliveryAssignmentSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["BRODCASTED", "ASSIGNED", "EXPIRED", "COMPLETED"],
+            enum: ["BRODCASTED", "ASSIGNED", "COMPLETED"],
             default: "BRODCASTED",
         },
 

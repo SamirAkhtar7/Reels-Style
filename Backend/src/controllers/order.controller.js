@@ -4,9 +4,11 @@ const ShopModelImport = require("../models/shop.model");
 const UserModelImport = require("../models/user.model");
 const ItemModelImport = require("../models/item.model");
 const Order = require("../models/order.model");
+const DeliveryAssignment = require("../models/deliveryAssignment.model");
 const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
+
 
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
@@ -209,12 +211,63 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Shop order not found in this order" });
     }
 
+
     // Update the status of the specific shopOrder entry
     order.status = status ;
+
+
+    if (status == "Out of delivery" || shopOrder.assignment) {
+      const { latitude, longitude } = order.deliveryAddress;
+      const nearByDeliveryBoys = await UserModel.find({
+        role: "foodDelivery",
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            $maxDistance: 5000, // 5 km radius
+          },
+        },
+      });
+
+      //Delivery Boy available check
+
+      if (nearByDeliveryBoys.length === 0) {
+        console.log("No delivery  ")
+        return res.status(200).json({ message: "Delivery Boy not available " });  
+      }
+
+      console.log("nearByDeliveryBoys", nearByDeliveryBoys.length);
+      // Assign the first available
+
+      const nearByDeliveryBoysIds = nearByDeliveryBoys.map((d) => d._id)
+
+      const busyDeliveryBoysIds = await DeliveryAssignment.find({
+        assignedTo: { $in: nearByDeliveryBoysIds },
+        status: { $nin: ["BRODCASTED", "COMPLETED"] },
+
+        
+      }).distinct("assignedTo");
+
+      const busyIdSet = new Set(busyDeliveryBoysIds.map((id) => String(id)))
+      const availableDeliveryBoys = nearByDeliveryBoysIds.filter((id) => !busyIdSet.has(String(id)))
+      console.log("availableDeliveryBoys", availableDeliveryBoys.length);
+
+      if (availableDeliveryBoys.length === 0) {
+        console.log("No available delivery ")
+      }
+      
+       
+    }
+
    
     await order.save();
    // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
 
+    
+    
+    
     
     return res.status(200).json(order.status );  
 
