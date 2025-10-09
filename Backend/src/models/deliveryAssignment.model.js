@@ -33,6 +33,11 @@ const deliveryAssignmentSchema = new mongoose.Schema(
             enum: ["BRODCASTED", "ASSIGNED", "COMPLETED"],
             default: "BRODCASTED",
         },
+        assigendDeliveryBoy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            
+        }
 
 
     },

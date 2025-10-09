@@ -215,6 +215,8 @@ exports.updateOrderStatus = async (req, res) => {
     // Update the status of the specific shopOrder entry
     order.status = status ;
 
+    let deliveryBoyPayload =[];
+    // If status is "Out for delivery", find nearby delivery boys
 
     if (status == "Out of delivery" || shopOrder.assignment) {
       const { latitude, longitude } = order.deliveryAddress;
@@ -251,21 +253,46 @@ exports.updateOrderStatus = async (req, res) => {
       }).distinct("assignedTo");
 
       const busyIdSet = new Set(busyDeliveryBoysIds.map((id) => String(id)))
-      const availableDeliveryBoys = nearByDeliveryBoysIds.filter((id) => !busyIdSet.has(String(id)))
-      console.log("availableDeliveryBoys", availableDeliveryBoys.length);
-
-      if (availableDeliveryBoys.length === 0) {
-        console.log("No available delivery ")
+      const availableDeliveryBoys = nearByDeliveryBoysIds.filter((id) => !busyIdSet.has(String(id._id)))
+     
+    const candidate = availableDeliveryBoys.map(d =>d._id )
+      if (candidate.length === 0) {
+        await order.save();
+        console.log("No delivery  available")
+        return res.status(200).json({ message: "Delivery not available " });
       }
       
-       
+      const deliveryAssignment = await DeliveryAssignment.create({
+        order: order._id,
+        shop: shopOrder.Shop,
+        shopOrder: shopOrder._id,
+        BroadcastTo: candidate,
+        status: "BRODCASTED",
+      })
+
+      shopOrder.assigendDeliveryBoy= deliveryAssignment.assigendTo;
+      shopOrder.assignment = deliveryAssignment._id;
+
+
+      deliveryBoyPayload = availableDeliveryBoys.map((b) => ({
+        id: b._id,
+        name: b.name,
+        latitude: b.location.coordinates?.[0],
+        longitude: b.location.coordinates?.[1],
+        mobile: b.mobile,
+
+      }))
+
+      
+     
     }
 
    
     await order.save();
    // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
 
-    
+    await order.populate("shopOrder.Shop", "name");
+      await order.populate("shopOrder.assigendDeliveryBoy", "name email mobile");
     
     
     
