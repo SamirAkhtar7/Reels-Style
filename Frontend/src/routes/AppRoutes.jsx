@@ -20,6 +20,7 @@ import CheckOut from "../pages/CheckOut";
 import OrderPlaced from "../pages/OrderPlaced";
 import MyOrder from "../pages/MyOrder";
 import useGetMyOrder from "../hooks/useGetMyOrder";
+import useGetUpdateLocation from "../hooks/useGetUpdateLocation"
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -28,7 +29,7 @@ const AppRoutes = () => {
   useGetCity();
   useGetShopByCity();
   useGetItemsByCity();
-
+  useGetUpdateLocation();
 
   useGetMyShop();
   useGetMyOrder()
