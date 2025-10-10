@@ -294,9 +294,15 @@ exports.updateOrderStatus = async (req, res) => {
     await order.populate("shopOrder.Shop", "name");
       await order.populate("shopOrder.assigendDeliveryBoy", "name email mobile");
     
+    const updatedOrder = await order.shopOrder.find((o) => o.Shop == shopId);
     
-    
-    return res.status(200).json(order.status );  
+    return res.status(200).json({
+      shopOrder: updatedOrder,
+      message: "Order status updated successfully",
+      assigendDeliveryBoy: updatedOrder.assigendDeliveryBoy,
+      deliveryBoyPayload, 
+      assignment: updatedOrder.assignment._id
+    } );  
 
     
   } catch (err) {
