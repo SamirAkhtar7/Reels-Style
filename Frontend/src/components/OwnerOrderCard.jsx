@@ -1,5 +1,6 @@
 import React from "react";
 import { MdPhone } from "react-icons/md";
+import { useState } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { updateOrderStatus } from "../redux/user.slice";
@@ -28,6 +29,8 @@ const SafeImg = ({ src, alt }) => {
 
 const OwnerOrderCard = ({ order }) => {
   const dispatch = useDispatch();
+
+  const [availableDeliveryBoys, setAvailableDeliveryBoys] = useState([])
   console.log(" OrderCard order:", order);
   if (!order) return null;
 
@@ -35,9 +38,10 @@ const OwnerOrderCard = ({ order }) => {
   const handleUpdateStatus = async (orderId, shopId, status) => {
     try {
       const response = await axios.post(`/api/order/update-order-status/${orderId}/${shopId}`, { status }, { withCredentials: true });
-      console.log("status update response:", response.data);  
+  
       dispatch(updateOrderStatus({ orderId, shopId, status }))
-
+      setAvailableDeliveryBoys(response?.data?.availableDeliveryBoys)
+      console.log("Status updated:", response.data);
 
     } catch (err) {
       console.error("Update status error:", err);

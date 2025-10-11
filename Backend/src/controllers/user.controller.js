@@ -91,7 +91,7 @@ exports.updateUserLocation = async (req, res) => {
 
     return res.status(200).json({
       message: "Location updated successfully",
-      coords: { latitude: lat, longitude: lon },
+      coords: { latitude: lon, longitude: lat },
       user,
     });
   } catch (err) {

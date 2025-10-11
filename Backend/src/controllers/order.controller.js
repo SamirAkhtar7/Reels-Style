@@ -9,7 +9,6 @@ const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
 
-
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
   try {
@@ -193,7 +192,6 @@ exports.getUserOrders = async (req, res) => {
   }
 };
 
-
 //Update order status - owner only
 exports.updateOrderStatus = async (req, res) => {
   try {
@@ -203,110 +201,126 @@ exports.updateOrderStatus = async (req, res) => {
     const order = await OrderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
-    } 
-
-    // Find the specific shopOrder entry for the given shopId
-    const shopOrder = await order.shopOrder.find(o => o.Shop == shopId);
-    if (!shopOrder) {
-      return res.status(404).json({ message: "Shop order not found in this order" });
     }
 
+    // Find the specific shopOrder entry for the given shopId
+    const shopOrder = await order.shopOrder.find((o) => o.Shop == shopId);
+    if (!shopOrder) {
+      return res
+        .status(404)
+        .json({ message: "Shop order not found in this order" });
+    }
 
     // Update the status of the specific shopOrder entry
-    order.status = status ;
+    order.status = status;
 
-    let deliveryBoyPayload =[];
+    let deliveryBoyPayload = [];
     // If status is "Out for delivery", find nearby delivery boys
+    if (status === "Out of delivery" || shopOrder.assignment) {
+      // Use delivery address coords (deliveryAddress likely has { text, latitude, longitude })
+      console.log("order.deliveryAddress:", order.deliveryAddress);
+      const addrLat = Number(order.deliveryAddress?.latitude);
+      const addrLon = Number(order.deliveryAddress?.longitude);
+      console.log("search coords (lon,lat):", addrLon, addrLat);
 
-    if (status == "Out of delivery" || shopOrder.assignment) {
-      const { latitude, longitude } = order.deliveryAddress;
+      const searchLon = Number(addrLon);
+      const searchLat = Number(addrLat);
+      const searchCoords = [searchLon, searchLat]; // IMPORTANT: [lon, lat]
+
+      // find nearby delivery users (returns user documents)
       const nearByDeliveryBoys = await UserModel.find({
         role: "foodDelivery",
         location: {
           $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [longitude, latitude],
-            },
-            $maxDistance: 5000, // 5 km radius
+            $geometry: { type: "Point", coordinates: searchCoords },
+            $maxDistance: 5000,
           },
         },
-      });
+      }).exec();
 
-      //Delivery Boy available check
+      console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
 
-      if (nearByDeliveryBoys.length === 0) {
-        console.log("No delivery  ")
-        return res.status(200).json({ message: "Delivery Boy not available " });  
-      }
-
-      console.log("nearByDeliveryBoys", nearByDeliveryBoys.length);
-      // Assign the first available
-
-      const nearByDeliveryBoysIds = nearByDeliveryBoys.map((d) => d._id)
-
-      const busyDeliveryBoysIds = await DeliveryAssignment.find({
-        assignedTo: { $in: nearByDeliveryBoysIds },
+      // get ids of busy delivery boys
+      const nearIds = nearByDeliveryBoys.map((d) => String(d._id));
+      const busyIds = await DeliveryAssignment.find({
+        assignedTo: { $in: nearIds },
         status: { $nin: ["BRODCASTED", "COMPLETED"] },
-
-        
       }).distinct("assignedTo");
+      const busySet = new Set((busyIds || []).map((id) => String(id)));
 
-      const busyIdSet = new Set(busyDeliveryBoysIds.map((id) => String(id)))
-      const availableDeliveryBoys = nearByDeliveryBoysIds.filter((id) => !busyIdSet.has(String(id._id)))
-     
-    const candidate = availableDeliveryBoys.map(d =>d._id )
-      if (candidate.length === 0) {
+      // filter user docs to available ones
+      const availableDeliveryDocs = nearByDeliveryBoys.filter(
+        (d) => !busySet.has(String(d._id))
+      );
+
+      // candidate ids to broadcast
+      const candidateIds = availableDeliveryDocs.map((d) => d._id);
+      if (!candidateIds.length) {
         await order.save();
-        console.log("No delivery  available")
-        return res.status(200).json({ message: "Delivery not available " });
+        console.log("No delivery available");
+        return res.status(200).json({ message: "Delivery not available" });
       }
-      
+
+      // create assignment
       const deliveryAssignment = await DeliveryAssignment.create({
         order: order._id,
         shop: shopOrder.Shop,
         shopOrder: shopOrder._id,
-        BroadcastTo: candidate,
+        BroadcastTo: candidateIds,
         status: "BRODCASTED",
-      })
+      });
 
-      shopOrder.assigendDeliveryBoy= deliveryAssignment.assigendTo;
+      // set the assignedDeliveryBoy and assignment refs using correct field names
+      shopOrder.assignedDeliveryBoy =
+        deliveryAssignment.assignedTo ?? deliveryAssignment.assignedTo ?? null;
       shopOrder.assignment = deliveryAssignment._id;
 
-
-      deliveryBoyPayload = availableDeliveryBoys.map((b) => ({
-        id: b._id,
-        name: b.name,
-        latitude: b.location.coordinates?.[0],
-        longitude: b.location.coordinates?.[1],
-        mobile: b.mobile,
-
-      }))
-
-      
-     
+      // build safe payload using user docs and guard location shape
+      deliveryBoyPayload = availableDeliveryDocs.map((b) => {
+        const coords = b.location?.coordinates ?? b.Location?.coordinates ?? [];
+        const lon = Number(coords?.[0]);
+        const lat = Number(coords?.[1]);
+        return {
+          id: b._id,
+          name: b.fullName ?? b.name ?? "",
+          latitude: Number.isFinite(lat) ? lat : null,
+          longitude: Number.isFinite(lon) ? lon : null,
+          mobile: b.mobile,
+        };
+      });
     }
 
-   
     await order.save();
-   // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
+    // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
+    // populate needed sub-doc refs (including assignedDeliveryBoy)
+    await order.populate([
+      { path: "shopOrder.Shop", select: "name" },
+      {
+        path: "shopOrder.assignedDeliveryBoy",
+        model: UserModel,
+        select: "fullName email mobile location",
+      },
+      {
+        path: "shopOrder.shopOrderItems.product",
+        model: ItemModel,
+        select: "name image price foodType",
+      },
+    ]);
 
-    await order.populate("shopOrder.Shop", "name");
-      await order.populate("shopOrder.assigendDeliveryBoy", "name email mobile");
-    
-    const updatedOrder = await order.shopOrder.find((o) => o.Shop == shopId);
-    
+    // locate the shopOrder entry we updated
+    const updatedShopOrder = (order.shopOrder || []).find(
+      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
+    );
+
     return res.status(200).json({
-      shopOrder: updatedOrder,
+      shopOrder: updatedShopOrder ?? null,
       message: "Order status updated successfully",
-      assigendDeliveryBoy: updatedOrder.assigendDeliveryBoy,
-      deliveryBoyPayload, 
-      assignment: updatedOrder.assignment._id
-    } );  
-
-    
+      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy ?? null,
+      deliveryBoyPayload,
+      assignment: updatedShopOrder?.assignment ?? null,
+    });
   } catch (err) {
     console.error("Update order status error:", err);
     return res.status(500).json({ message: "Update order status error" });
   }
- }
+};

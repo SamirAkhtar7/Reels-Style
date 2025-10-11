@@ -40,17 +40,35 @@ const shopOrderSchema = new mongoose.Schema(
       type: Number,
     },
 
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Prepared",
+        "Out for delivery",
+        "Out of delivery",
+        "Accepted",
+        "Delivered",
+        "Cancelled",
+      ],
+      default: "Pending",
+    },
+
     shopOrderItems: [shopOrderItemSchema],
 
+    // who was assigned for this shopOrder (nullable)
+    assignedDeliveryBoy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    // reference to the delivery assignment document (optional)
     assignment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DeliveryAssignment",
       default: null,
-
     },
-
   },
-
   {
     timestamps: true,
   }
