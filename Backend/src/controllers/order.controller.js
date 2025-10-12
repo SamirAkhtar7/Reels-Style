@@ -308,16 +308,17 @@ exports.updateOrderStatus = async (req, res) => {
     ]);
 
     // locate the shopOrder entry we updated
-    const updatedShopOrder = (order.shopOrder || []).find(
+    const updatedShopOrder = order.shopOrder.find(
       (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
     );
 
+    console.log("Updated order status:", updatedShopOrder)
     return res.status(200).json({
-      shopOrder: updatedShopOrder ?? null,
       message: "Order status updated successfully",
-      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy ?? null,
-      deliveryBoyPayload,
-      assignment: updatedShopOrder?.assignment ?? null,
+      shopOrder: updatedShopOrder ,
+      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy ,
+      availableDeliveryboys:deliveryBoyPayload,
+      assignment: updatedShopOrder?.assignment._id,
     });
   } catch (err) {
     console.error("Update order status error:", err);

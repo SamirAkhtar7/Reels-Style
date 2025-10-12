@@ -15,12 +15,12 @@ const useGetUpdateLocation = () => {
                 latitude,
                 longitude
             }, { withCredentials: true })
-            console.log("Location updated:", response.data);
+            // console.log("Location updated:", response.data);
         }
 
         navigator.geolocation.watchPosition((position) => {
             updateLocation(position.coords.latitude, position.coords.longitude);
-            console.log("Watching position:",);
+            // console.log("Watching position:",);
 
         })
         
