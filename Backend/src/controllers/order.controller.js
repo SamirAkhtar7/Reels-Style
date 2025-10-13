@@ -213,6 +213,8 @@ exports.updateOrderStatus = async (req, res) => {
 
     // Update the status of the specific shopOrder entry
     order.status = status;
+    shopOrder.status = status;
+
 
     let deliveryBoyPayload = [];
     // If status is "Out for delivery", find nearby delivery boys
@@ -235,7 +237,7 @@ exports.updateOrderStatus = async (req, res) => {
             $geometry: { type: "Point", coordinates: searchCoords },
             $maxDistance: 5000,
           },
-        },
+        },  
       }).exec();
 
       console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
@@ -290,6 +292,10 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
+
+    const updatedShopOrder = order.shopOrder.find(
+      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
+    );
     await order.save();
     // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
     // populate needed sub-doc refs (including assignedDeliveryBoy)
@@ -308,9 +314,7 @@ exports.updateOrderStatus = async (req, res) => {
     ]);
 
     // locate the shopOrder entry we updated
-    const updatedShopOrder = order.shopOrder.find(
-      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
-    );
+    
 
     console.log("Updated order status:", updatedShopOrder)
     return res.status(200).json({

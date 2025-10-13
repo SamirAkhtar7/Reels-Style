@@ -40,8 +40,10 @@ const OwnerOrderCard = ({ order }) => {
       const response = await axios.post(`/api/order/update-order-status/${orderId}/${shopId}`, { status }, { withCredentials: true });
   
       dispatch(updateOrderStatus({ orderId, shopId, status }))
-      setAvailableDeliveryBoys(response?.data?.availableDeliveryBoys)
+     
+      setAvailableDeliveryBoys(response?.data?.availableDeliveryboys);
       console.log("Status updated:", response.data);
+      console.log("Available Delivery", availableDeliveryBoys.length);
 
     } catch (err) {
       console.error("Update status error:", err);
@@ -162,6 +164,24 @@ const OwnerOrderCard = ({ order }) => {
           </div>
         </div>
       </div>
+
+      {order.status === "Out of delivery" && (
+        <div className="mt-3 p-2 border rounded-lg text-sm bg-orange-50">
+          <p>Available Delivary Boys:</p>
+          {availableDeliveryBoys.length > 0 ? (
+            availableDeliveryBoys.map((delivaryboy, index) => (
+              <div className="text-gray-500 ">
+                <p key={index}>
+                  {delivaryboy.name} - {delivaryboy.mobile}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">Waiting available delivery boys</p>
+          )}
+        </div>
+      )}
+
       <div className="text-right font-bold text-lg">
         Total: ₹{order?.totalAmount ?? 0}
       </div>
