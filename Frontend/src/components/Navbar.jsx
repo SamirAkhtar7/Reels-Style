@@ -77,15 +77,17 @@ const Navbar = () => {
                 onClick={() => {
                   navigate("/add-items");
                 }}
-                className=" flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-white] text-[#ff4d2d]">
+                className=" flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-white] text-[#ff4d2d]"
+              >
                 <FiPlus size={20} />
                 <span className=" hidden md:block lg:block">Add Food Item</span>
               </button>
             )}
             {/*pendding order */}
-            <div 
-            onClick={() => navigate("/my-orders")}
-           className="relative cursor-pointer">
+            <div
+              onClick={() => navigate("/my-orders")}
+              className="relative cursor-pointer"
+            >
               <FiClipboard size={22} className="text-[#ff4d2d]" />
               <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
                 2
@@ -95,8 +97,10 @@ const Navbar = () => {
         )}
 
         {userData?.role == "user" && (
-          <div onClick={() => navigate("/cart")}
-           className="relative cursor-pointer">
+          <div
+            onClick={() => navigate("/cart")}
+            className="relative cursor-pointer"
+          >
             <FiShoppingCart size={25} className="text-[#ff4d2d]" />
 
             <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
@@ -113,10 +117,19 @@ const Navbar = () => {
           </div>
         </div>
         {showInfo && (
-          <div className=" fixed top-[80px] right-[10px] md:right-[10%] lg:right-[25%] w-[180Px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[99]">
+          <div
+            className={`fixed top-[80px] right-[10px] 
+          ${
+            userData?.role === "foodDelivery"
+              ? "md:right-[5%] lg:right-[10%]"
+              : "md:right-[10%] lg:right-[25%] "
+          }
+           w-[180Px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[99]`}
+          >
             <div className="text-[17px] font-semibold ">{name}</div>
             {userData?.role == "user" && (
-              <div onClick={() => navigate("/my-orders")}
+              <div
+                onClick={() => navigate("/my-orders")}
                 className="cursor-pointer font-semibold
           "
               >
