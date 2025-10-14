@@ -329,3 +329,37 @@ exports.updateOrderStatus = async (req, res) => {
     return res.status(500).json({ message: "Update order status error" });
   }
 };
+
+
+
+
+
+exports.getDeliveryBoyAssignment = async (req, res) => {
+  try {
+    const deliveryBoyId = req.userId;
+    if (!deliveryBoyId) {
+      return res.status(401).json({ message: "Please login first" });
+    }
+    const assignments = await DeliveryAssignment.find({
+      bordcastedTo: deliveryBoyId,
+      status: "BRODCASTED",
+    
+    }).populate("order").populate("shop")
+
+    const formated = assignments.map(a => ({
+      assignmentId: a._id,
+      orderId: a.order._id,
+      shopName: a.shop.name,
+
+      deliveryAddress: a.order.deliveryAddress, 
+      items: a.order.shopOrder.find(so => so._id == a.shopOrder._id
+      ).shopOrderItems || [],
+      subtotal : a.order.shopOrder.find(so => so._id == a.shopOrder._id)?.subtotal
+    }))
+    
+    return res.status(200).json(formated)
+
+   } catch (err) {
+    console.error("Get assigned orders error:", err);
+  }
+ }
