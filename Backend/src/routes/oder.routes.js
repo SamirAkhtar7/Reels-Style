@@ -17,7 +17,9 @@ router.get(
   orderController.getUserOrders
 );
 
-router.post("/update-order-status/:orderId/:shopId",authMiddleware.authUserMiddleware, orderController.updateOrderStatus);
+router.post("/update-order-status/:orderId/:shopId", authMiddleware.authUserMiddleware, orderController.updateOrderStatus);
+router.get("/get-assigned-orders", authMiddleware.authUserMiddleware, orderController.getDeliveryBoyAssignment);
+
  
 
 module.exports = router;
