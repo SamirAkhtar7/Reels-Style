@@ -7,7 +7,7 @@ import axios from "axios"
 
 const useGetUpdateLocation = () => {
     const { userData } = useSelector((state) => state.user)   
-    console.log("userData in useGetUpdateLocation:", userData);
+   // console.log("userData in useGetUpdateLocation:", userData);
 
     useEffect(() => {
         const updateLocation = async (latitude,longitude) => {

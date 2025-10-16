@@ -185,7 +185,8 @@ exports.getUserOrders = async (req, res) => {
       return res.status(200).json({ orders: ownerOrders });
     }
 
-    return res.status(400).json({ message: "Invalid user role" });
+    // For any other roles (delivery, admin, etc.) return empty list instead of 400
+    return res.status(200).json({ orders: [] });
   } catch (err) {
     console.error("Get my orders error:", err);
     return res.status(500).json({ message: "Get my orders error" });
@@ -215,7 +216,6 @@ exports.updateOrderStatus = async (req, res) => {
     order.status = status;
     shopOrder.status = status;
 
-
     let deliveryBoyPayload = [];
     // If status is "Out for delivery", find nearby delivery boys
     if (status === "Out of delivery" || shopOrder.assignment) {
@@ -237,7 +237,7 @@ exports.updateOrderStatus = async (req, res) => {
             $geometry: { type: "Point", coordinates: searchCoords },
             $maxDistance: 5000,
           },
-        },  
+        },
       }).exec();
 
       console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
@@ -268,7 +268,8 @@ exports.updateOrderStatus = async (req, res) => {
         order: order._id,
         shop: shopOrder.Shop,
         shopOrder: shopOrder._id,
-        BroadcastTo: candidateIds,
+        // match schema field name (typo in schema: brodcastedTo)
+        brodcastedTo: candidateIds,
         status: "BRODCASTED",
       });
 
@@ -292,7 +293,6 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-
     const updatedShopOrder = order.shopOrder.find(
       (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
     );
@@ -314,14 +314,13 @@ exports.updateOrderStatus = async (req, res) => {
     ]);
 
     // locate the shopOrder entry we updated
-    
 
-    console.log("Updated order status:", updatedShopOrder)
+    console.log("Updated order status:", updatedShopOrder);
     return res.status(200).json({
       message: "Order status updated successfully",
-      shopOrder: updatedShopOrder ,
-      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy ,
-      availableDeliveryboys:deliveryBoyPayload,
+      shopOrder: updatedShopOrder,
+      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
+      availableDeliveryboys: deliveryBoyPayload,
       assignment: updatedShopOrder?.assignment._id,
     });
   } catch (err) {
@@ -330,36 +329,87 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-
-
-
-
 exports.getDeliveryBoyAssignment = async (req, res) => {
   try {
-    const deliveryBoyId = req.userId;
+    const deliveryBoyId = req.user?._id ?? req.userId;
     if (!deliveryBoyId) {
       return res.status(401).json({ message: "Please login first" });
     }
+
+    console.log("deliveryBoyId:", deliveryBoyId);
+
+    // find assignments broadcasted to this delivery boy
     const assignments = await DeliveryAssignment.find({
-      bordcastedTo: deliveryBoyId,
+      brodcastedTo: { $in: [deliveryBoyId, String(deliveryBoyId)] },
       status: "BRODCASTED",
-    
-    }).populate("order").populate("shop")
+    })
+      .populate("shop")
+      .lean();
 
-    const formated = assignments.map(a => ({
-      assignmentId: a._id,
-      orderId: a.order._id,
-      shopName: a.shop.name,
+    console.log("assignments in get Delivery :", assignments);
 
-      deliveryAddress: a.order.deliveryAddress, 
-      items: a.order.shopOrder.find(so => so._id == a.shopOrder._id
-      ).shopOrderItems || [],
-      subtotal : a.order.shopOrder.find(so => so._id == a.shopOrder._id)?.subtotal
-    }))
-    
-    return res.status(200).json(formated)
+    if (!assignments || assignments.length === 0) {
+      return res.status(200).json([]);
+    }
 
-   } catch (err) {
+    // collect shopOrder ids referenced by assignments
+    const shopOrderIds = assignments
+      .map((a) => a.shopOrder)
+      .filter(Boolean)
+      .map((id) => String(id));
+
+    // fetch orders that contain these shopOrder subdocs (batch)
+    const orders = await OrderModel.find({
+      "shopOrder._id": { $in: shopOrderIds },
+    })
+      .populate({ path: "shopOrder.Shop", select: "name" })
+      .populate({
+        path: "shopOrder.shopOrderItems.product",
+        model: "Item",
+        select: "name image price foodType",
+      })
+      .lean();
+
+    // build map: shopOrderId -> { order, shopOrderSubdoc }
+    const shopOrderMap = {};
+    for (const order of orders) {
+      for (const so of order.shopOrder || []) {
+        shopOrderMap[String(so._id)] = { order, shopOrder: so };
+      }
+    }
+
+    // format assignments using the map (guard missing data)
+    const formated = assignments
+      .map((a) => {
+        const key = String(a.shopOrder);
+        const entry = shopOrderMap[key];
+        if (!entry) {
+          console.warn(
+            "No order found for shopOrder:",
+            key,
+            "assignment:",
+            a._id
+          );
+          return null;
+        }
+
+        return {
+          assignmentId: a._id,
+          orderId: entry.order._id,
+          shopId: a.shop?._id ?? entry.shopOrder.Shop?._id,
+          shopName: a.shop?.name ?? entry.shopOrder.Shop?.name ?? "",
+          deliveryAddress: entry.order.deliveryAddress,
+          items: entry.shopOrder.shopOrderItems || [],
+          subtotal: entry.shopOrder.subtotal || 0,
+          status: a.status,
+        };
+      })
+      .filter(Boolean);
+
+    console.log("formatted assignments count:", formated.length);
+    return res.status(200).json(formated);
+  } catch (err) {
     console.error("Get assigned orders error:", err);
+    return res.status(500).json({ message: "Get assigned orders error" });
   }
- }
+};
