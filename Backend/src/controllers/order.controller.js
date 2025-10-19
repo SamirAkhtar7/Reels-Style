@@ -222,10 +222,10 @@ exports.updateOrderStatus = async (req, res) => {
     // If status is "Out of delivery", find nearby delivery boys and create assignment if none exists
     if (status === "Out of delivery" && !shopOrder.assignment) {
       // Use delivery address coords (deliveryAddress likely has { text, latitude, longitude })
-      console.log("order.deliveryAddress:", order.deliveryAddress);
+      //console.log("order.deliveryAddress:", order.deliveryAddress);
       const addrLat = Number(order.deliveryAddress?.latitude);
       const addrLon = Number(order.deliveryAddress?.longitude);
-      console.log("search coords (lon,lat):", addrLon, addrLat);
+      //console.log("search coords (lon,lat):", addrLon, addrLat);
 
       const searchLon = Number(addrLon);
       const searchLat = Number(addrLat);
@@ -242,7 +242,7 @@ exports.updateOrderStatus = async (req, res) => {
         },
       }).exec();
 
-      console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
+     // console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
 
       // get ids of busy delivery boys
       const nearIds = nearByDeliveryBoys.map((d) => String(d._id));
@@ -328,7 +328,7 @@ exports.updateOrderStatus = async (req, res) => {
       assignmentId = rawAssignment._id ? rawAssignment._id : rawAssignment;
     }
 
-    console.log("Updated order status:", updatedShopOrder);
+   // console.log("Updated order status:", updatedShopOrder);
     return res.status(200).json({
       message: "Order status updated successfully",
       shopOrder: refreshedShopOrder,
@@ -342,6 +342,7 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+// GET /api/order/delivery/assignments
 exports.getDeliveryBoyAssignment = async (req, res) => {
   try {
     const deliveryBoyId = req.user?._id ?? req.userId;
@@ -349,7 +350,7 @@ exports.getDeliveryBoyAssignment = async (req, res) => {
       return res.status(401).json({ message: "Please login first" });
     }
 
-    console.log("deliveryBoyId:", deliveryBoyId);
+  //  console.log("deliveryBoyId:", deliveryBoyId);
 
     // find assignments broadcasted to this delivery boy
     const assignments = await DeliveryAssignment.find({
@@ -359,7 +360,7 @@ exports.getDeliveryBoyAssignment = async (req, res) => {
       .populate("shop")
       .lean();
 
-    console.log("assignments in get Delivery :", assignments);
+   // console.log("assignments in get Delivery :", assignments);
 
     if (!assignments || assignments.length === 0) {
       return res.status(200).json([]);
@@ -426,3 +427,51 @@ exports.getDeliveryBoyAssignment = async (req, res) => {
     return res.status(500).json({ message: "Get assigned orders error" });
   }
 };
+
+
+
+exports.acceptOrder = async (req, res) => {
+  
+  try {
+    const { assignmentId } = req.params;
+    const assignment = await DeliveryAssignment.findById(assignmentId);
+    if (!assignment) { 
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    if(assignment.status !== "BRODCASTED") {
+      return res.status(400).json({ message: "Assignment not in BRODCASTED status" });
+    }
+
+    const alreadyAssigned = await DeliveryAssignment.findOne({
+      assignedTo: req.userId,
+      status: { $nin: ["BRODCASTED", "COMPLETED"] },
+    });
+
+    if (alreadyAssigned) {
+      return res.status(400).json({ message: "You already have an active assignment" });
+    }
+    assignment.assignedTo = req.userId;
+    assignment.status = "ASSIGNED";
+    assignment.acceptedAt = new Date();  
+    await assignment.save();
+
+    const order = await OrderModel.findById(assignment.order);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found for this assignment" });
+    }
+
+    const shopOrderAssign = order.shopOrder.find(so => so._id == assignment.shopOrderId)
+    shopOrderAssign.assignedDeliveryBoy = req.userId;
+    await order.save();
+
+    await order.populate('shopOrders.assignedDeliveryBoy');
+
+    return res.status(200).json({ message: "Order accepted successfully", assignment });
+    
+  }
+  catch (err) {
+    console.error("Accept order error:",err)
+  }
+  
+}

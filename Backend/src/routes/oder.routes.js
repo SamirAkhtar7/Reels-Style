@@ -19,6 +19,11 @@ router.get(
 
 router.post("/update-order-status/:orderId/:shopId", authMiddleware.authUserMiddleware, orderController.updateOrderStatus);
 router.get("/get-assigned-orders", authMiddleware.authUserMiddleware, orderController.getDeliveryBoyAssignment);
+router.get(
+  "/accept-order/:assignmentId",
+  authMiddleware.authUserMiddleware,
+  orderController.acceptOrder
+);
 
  
 
