@@ -205,7 +205,9 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Find the specific shopOrder entry for the given shopId
-    const shopOrder = await order.shopOrder.find((o) => o.Shop == shopId);
+    const shopOrder = await order.shopOrder.find(
+      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
+    );
     if (!shopOrder) {
       return res
         .status(404)
@@ -217,8 +219,8 @@ exports.updateOrderStatus = async (req, res) => {
     shopOrder.status = status;
 
     let deliveryBoyPayload = [];
-    // If status is "Out for delivery", find nearby delivery boys
-    if (status === "Out of delivery" || shopOrder.assignment) {
+    // If status is "Out of delivery", find nearby delivery boys and create assignment if none exists
+    if (status === "Out of delivery" && !shopOrder.assignment) {
       // Use delivery address coords (deliveryAddress likely has { text, latitude, longitude })
       console.log("order.deliveryAddress:", order.deliveryAddress);
       const addrLat = Number(order.deliveryAddress?.latitude);
@@ -314,14 +316,25 @@ exports.updateOrderStatus = async (req, res) => {
     ]);
 
     // locate the shopOrder entry we updated
+    // safe extraction of assignment id (avoid reading _id of null)
+    const refreshedShopOrder = order.shopOrder.find(
+      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
+    );
+
+    let assignmentId = null;
+    const rawAssignment = refreshedShopOrder?.assignment;
+    if (rawAssignment) {
+      // populated doc (has _id) or raw ObjectId/string
+      assignmentId = rawAssignment._id ? rawAssignment._id : rawAssignment;
+    }
 
     console.log("Updated order status:", updatedShopOrder);
     return res.status(200).json({
       message: "Order status updated successfully",
-      shopOrder: updatedShopOrder,
-      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
+      shopOrder: refreshedShopOrder,
+      assignedDeliveryBoy: refreshedShopOrder?.assignedDeliveryBoy ?? null,
       availableDeliveryboys: deliveryBoyPayload,
-      assignment: updatedShopOrder?.assignment._id,
+      assignment: assignmentId,
     });
   } catch (err) {
     console.error("Update order status error:", err);
