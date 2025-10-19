@@ -30,28 +30,28 @@ const SafeImg = ({ src, alt }) => {
 const OwnerOrderCard = ({ order }) => {
   const dispatch = useDispatch();
 
-  const [availableDeliveryBoys, setAvailableDeliveryBoys] = useState([])
+  const [availableDeliveryBoys, setAvailableDeliveryBoys] = useState([]);
   console.log(" OrderCard order:", order);
   if (!order) return null;
 
-
+  //console.log("Order in OwnerOrderCard:", availableDeliveryBoys);
   const handleUpdateStatus = async (orderId, shopId, status) => {
     try {
-      const response = await axios.post(`/api/order/update-order-status/${orderId}/${shopId}`, { status }, { withCredentials: true });
-  
-      dispatch(updateOrderStatus({ orderId, shopId, status }))
-     
-      setAvailableDeliveryBoys(response?.data?.availableDeliveryboys);
-      console.log("Status updated:", response.data);
-      console.log("Available Delivery", availableDeliveryBoys.length);
+      const response = await axios.post(
+        `/api/order/update-order-status/${orderId}/${shopId}`,
+        { status },
+        { withCredentials: true }
+      );
 
+      dispatch(updateOrderStatus({ orderId, shopId, status }));
+
+      setAvailableDeliveryBoys(response?.data?.availableDeliveryboys);
+      //console.log("Status updated:", response.data);
+      //console.log("Available Delivery", availableDeliveryBoys.length);
     } catch (err) {
       console.error("Update status error:", err);
     }
-  
-  
-}
-
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
@@ -168,16 +168,27 @@ const OwnerOrderCard = ({ order }) => {
       {order.status === "Out of delivery" && (
         <div className="mt-3 p-2 border rounded-lg text-sm bg-orange-50">
           <p>Available Delivary Boys:</p>
-          {availableDeliveryBoys.length > 0 ? (
+          {availableDeliveryBoys?.length > 0 ? (
             availableDeliveryBoys.map((delivaryboy, index) => (
-              <div className="text-gray-500 ">
-                <p key={index}>
-                  {delivaryboy.name} - {delivaryboy.mobile}
+              <div
+                className="text-gray-500"
+                key={delivaryboy?.id ?? delivaryboy?._id ?? index}
+              >
+                <p>
+                  {delivaryboy?.name} - {delivaryboy?.mobile}
                 </p>
               </div>
             ))
+          ) : order?.shopOrder?.[0]?.assignedDeliveryBoy ? (
+            <div className="text-gray-500">
+              <p>
+                Assigned:{" "}
+                {order.shopOrder[0].assignedDeliveryBoy.fullName} -{" "}
+                {order.shopOrder[0].assignedDeliveryBoy.mobile}
+              </p>
+            </div>
           ) : (
-            <p className="text-gray-500">Waiting available delivery boys</p>
+            <p className="text-gray-500">No delivery boys available</p>
           )}
         </div>
       )}

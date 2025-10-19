@@ -145,6 +145,12 @@ exports.getUserOrders = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate({ path: "user", model: UserModel, select: "-password" })
         .populate("shopOrder.Shop", "name")
+        // populate assignedDeliveryBoy so frontend can read name/fullName
+       .populate({
+        path: "shopOrder.assignedDeliveryBoy",
+        model: UserModel,
+        select: "fullName name mobile",
+     })
         .populate({
           path: "shopOrder.owner",
           model: UserModel,
@@ -157,6 +163,7 @@ exports.getUserOrders = async (req, res) => {
           select: "name image price foodType",
         });
 
+
       return res.status(200).json({ orders });
     } else if (user.role === "owner") {
       const owner = String(user._id);
@@ -164,6 +171,12 @@ exports.getUserOrders = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate({ path: "user", model: UserModel, select: "-password" })
         .populate("shopOrder.Shop", "name")
+        // populate assignedDeliveryBoy so owner sees name & mobile instead of just id
+       .populate({
+        path: "shopOrder.assignedDeliveryBoy",
+        model: UserModel,
+        select: "fullName name mobile",
+     })
         .populate({
           path: "shopOrder.shopOrderItems.product",
           model: ItemModel,
