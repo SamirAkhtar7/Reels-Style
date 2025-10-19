@@ -25,13 +25,13 @@ exports.updateUserLocation = async (req, res) => {
     const { latitude, longitude } = req.body;
 
     // DEBUG: log incoming payload and auth info
-    console.log("updateUserLocation payload:", { latitude, longitude });
-    console.log(
-      "req.userId:",
-      req.userId,
-      "req.user?._id:",
-      req.user && req.user._id
-    );
+    //console.log("updateUserLocation payload:", { latitude, longitude });
+    // console.log(
+    //   "req.userId:",
+    //   req.userId,
+    //   "req.user?._id:",
+    //   req.user && req.user._id
+    // );
 
     // resolve user id robustly
     const userId = req.userId || (req.user && (req.user._id || req.user.id));
@@ -83,11 +83,11 @@ exports.updateUserLocation = async (req, res) => {
       await user.save();
     }
 
-    console.log("updateUserLocation saved:", {
-      userId,
-      fieldName,
-      coords: user[fieldName] && user[fieldName].coordinates,
-    });
+    // console.log("updateUserLocation saved:", {
+    //   userId,
+    //   fieldName,
+    //   coords: user[fieldName] && user[fieldName].coordinates,
+    // });
 
     return res.status(200).json({
       message: "Location updated successfully",
