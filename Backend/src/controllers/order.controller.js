@@ -146,11 +146,11 @@ exports.getUserOrders = async (req, res) => {
         .populate({ path: "user", model: UserModel, select: "-password" })
         .populate("shopOrder.Shop", "name")
         // populate assignedDeliveryBoy so frontend can read name/fullName
-       .populate({
-        path: "shopOrder.assignedDeliveryBoy",
-        model: UserModel,
-        select: "fullName name mobile",
-     })
+        .populate({
+          path: "shopOrder.assignedDeliveryBoy",
+          model: UserModel,
+          select: "fullName name mobile",
+        })
         .populate({
           path: "shopOrder.owner",
           model: UserModel,
@@ -163,7 +163,6 @@ exports.getUserOrders = async (req, res) => {
           select: "name image price foodType",
         });
 
-
       return res.status(200).json({ orders });
     } else if (user.role === "owner") {
       const owner = String(user._id);
@@ -172,11 +171,11 @@ exports.getUserOrders = async (req, res) => {
         .populate({ path: "user", model: UserModel, select: "-password" })
         .populate("shopOrder.Shop", "name")
         // populate assignedDeliveryBoy so owner sees name & mobile instead of just id
-       .populate({
-        path: "shopOrder.assignedDeliveryBoy",
-        model: UserModel,
-        select: "fullName name mobile",
-     })
+        .populate({
+          path: "shopOrder.assignedDeliveryBoy",
+          model: UserModel,
+          select: "fullName name mobile",
+        })
         .populate({
           path: "shopOrder.shopOrderItems.product",
           model: ItemModel,
@@ -441,6 +440,7 @@ exports.getDeliveryBoyAssignment = async (req, res) => {
   }
 };
 
+// POST /api/order/delivery/accept/:assignmentId
 exports.acceptOrder = async (req, res) => {
   try {
     const { assignmentId } = req.params;
@@ -535,5 +535,60 @@ exports.acceptOrder = async (req, res) => {
   } catch (err) {
     console.error("Accept order error:", err);
     return res.status(500).json({ message: "Accept order error" });
+  }
+};
+
+exports.getCurrentOrders = async (req, res) => {
+  try {
+    const assignment = await DeliveryAssignment.findOne({
+      assignedTo: req.userId,
+      status: "assigned",
+    })
+      .populate("shop", "name")
+      .populate("assignedTo", "fullName mobile location")
+      .populate({
+        path: "order",
+        populate: [{ path: "user", select: "fullName email mobile location " }],
+      });
+
+    if (!assignment) {
+      return res.status(400).json({ message: "No assignments found" });
+    }
+    if (!assignment.order) {
+      return res
+        .status(404)
+        .json({ message: "Order not found for this assignment" });
+    }
+
+    const shopOrderAssign = assignment.order.shopOrder.find(so=>String(so._id) == String(assignment.shopOrderId));
+if(!shopOrderAssign){
+  return res.status(404).json({ message: "Shop order not found in this order" });
+    }
+    
+    let deliveryBoyLocation = { lat: null, lon: null }
+    if (assignment.assignedTo?.location?.coordinates.lenght == 2) { 
+      deliveryBoyLocation.lon = assignment.assignedTo?.location?.coordinates[0];
+      deliveryBoyLocation.lat = assignment.assignedTo?.location?.coordinates[1];
+
+    }
+    let customerLocation = { lat: null, lon: null }
+    if (assignment.order?.deliveryAddress) {
+      
+      customerLocation.lon = assignment.order?.deliveryAddress?.longitude ;
+      customerLocation.lat = assignment.order?.deliveryAddress?.latitude;
+    
+    }
+
+
+    return res.status(200).json({
+      _id: assignment.order._id,
+      user: assignment.order.user,
+      shopOrder: shopOrderAssign,
+      deliveryAddress: assignment.order.deliveryAddress,
+      deliveryBoyLocation,
+      customerLocation
+     });
+  } catch (err) {
+    return res.status(404).json({ message: "No current orders found !" });
   }
 };

@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { updateOrderStatus } from "../redux/user.slice";
+import { FaPhoneAlt } from "react-icons/fa";
 /**
  * OwnerOrderCard
  * - Renders order details for owners
@@ -167,7 +168,11 @@ const OwnerOrderCard = ({ order }) => {
 
       {order.status === "Out of delivery" && (
         <div className="mt-3 p-2 border rounded-lg text-sm bg-orange-50">
-          <p>Available Delivary Boys:</p>
+          {order.shopOrder[0].assignedDeliveryBoy ? (
+            <p>Assigned Delivery Boys:</p>
+          ) : (
+            <p>Available Delivary Boys:</p>
+          )}{" "}
           {availableDeliveryBoys?.length > 0 ? (
             availableDeliveryBoys.map((delivaryboy, index) => (
               <div
@@ -182,8 +187,7 @@ const OwnerOrderCard = ({ order }) => {
           ) : order?.shopOrder?.[0]?.assignedDeliveryBoy ? (
             <div className="text-gray-500">
               <p>
-                Assigned:{" "}
-                {order.shopOrder[0].assignedDeliveryBoy.fullName} -{" "}
+                Assigned: {order.shopOrder[0].assignedDeliveryBoy.fullName} -{" "}
                 {order.shopOrder[0].assignedDeliveryBoy.mobile}
               </p>
             </div>
