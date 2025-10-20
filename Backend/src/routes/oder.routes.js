@@ -25,6 +25,11 @@ router.get(
   orderController.acceptOrder
 );
 
+router.get(
+  "/get-current-orders",
+  authMiddleware.authUserMiddleware,
+  orderController.getCurrentOrders
+);
  
 
 module.exports = router;
