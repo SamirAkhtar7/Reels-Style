@@ -33,14 +33,30 @@ const DeliveryBoy = () => {
         withCredentials: true,
       });
       console.log("Order accepted:", response.data);
+      await getCurrentOrder();
     }
     catch (err) {
       console.error("Error in accepting order:", err);
     }
   }
 
+  const getCurrentOrder = async () => {
+    try { 
+      const response = await axios.get(`/api/order/get-current-orders`, { withCredentials: true })
+      console.log("Current Orders:", response.data);
+      
+    }
+    catch (err) {
+      console.error("Error in fetching current orders:", err);
+    }
+}
+
+
+
   useEffect(() => {
     getAssignments();
+   getCurrentOrder(); 
+     
   }, [userData]);
 
   return (

@@ -540,15 +540,31 @@ exports.acceptOrder = async (req, res) => {
 
 exports.getCurrentOrders = async (req, res) => {
   try {
+    const deliveryBoyId = req.user?._id ?? req.userId;
+    if (!deliveryBoyId) {
+      return res.status(401).json({ message: "Please login first" });
+    }
+
     const assignment = await DeliveryAssignment.findOne({
-      assignedTo: req.userId,
-      status: "assigned",
+      assignedTo: deliveryBoyId,
+      // use canonical status value used elsewhere
+      status: "ASSIGNED",
     })
       .populate("shop", "name")
-      .populate("assignedTo", "fullName mobile location")
+      .populate({
+        path: "assignedTo",
+        model: UserModel,
+        select: "fullName mobile location",
+      })
       .populate({
         path: "order",
-        populate: [{ path: "user", select: "fullName email mobile location " }],
+        populate: [
+          {
+            path: "user",
+            model: UserModel,
+            select: "fullName email mobile location",
+          },
+        ],
       });
 
     if (!assignment) {
@@ -560,25 +576,32 @@ exports.getCurrentOrders = async (req, res) => {
         .json({ message: "Order not found for this assignment" });
     }
 
-    const shopOrderAssign = assignment.order.shopOrder.find(so=>String(so._id) == String(assignment.shopOrderId));
-if(!shopOrderAssign){
-  return res.status(404).json({ message: "Shop order not found in this order" });
-    }
-    
-    let deliveryBoyLocation = { lat: null, lon: null }
-    if (assignment.assignedTo?.location?.coordinates.lenght == 2) { 
-      deliveryBoyLocation.lon = assignment.assignedTo?.location?.coordinates[0];
-      deliveryBoyLocation.lat = assignment.assignedTo?.location?.coordinates[1];
+    // shopOrder subdoc id is stored in assignment.shopOrder
+    const shopOrderAssign =
+      (typeof assignment.order.shopOrder?.id === "function" &&
+        assignment.order.shopOrder.id(assignment.shopOrder)) ||
+      assignment.order.shopOrder.find(
+        (so) => String(so._id) === String(assignment.shopOrder)
+      );
 
+    if (!shopOrderAssign) {
+      return res
+        .status(404)
+        .json({ message: "Shop order not found in this order" });
     }
-    let customerLocation = { lat: null, lon: null }
+
+    let deliveryBoyLocation = { lat: null, lon: null };
+    const coords = assignment.assignedTo?.location?.coordinates;
+    if (Array.isArray(coords) && coords.length === 2) {
+      deliveryBoyLocation.lon = coords[0];
+      deliveryBoyLocation.lat = coords[1];
+    }
+
+    let customerLocation = { lat: null, lon: null };
     if (assignment.order?.deliveryAddress) {
-      
-      customerLocation.lon = assignment.order?.deliveryAddress?.longitude ;
-      customerLocation.lat = assignment.order?.deliveryAddress?.latitude;
-    
+      customerLocation.lon = assignment.order.deliveryAddress.longitude;
+      customerLocation.lat = assignment.order.deliveryAddress.latitude;
     }
-
 
     return res.status(200).json({
       _id: assignment.order._id,
@@ -586,9 +609,10 @@ if(!shopOrderAssign){
       shopOrder: shopOrderAssign,
       deliveryAddress: assignment.order.deliveryAddress,
       deliveryBoyLocation,
-      customerLocation
-     });
+      customerLocation,
+    });
   } catch (err) {
-    return res.status(404).json({ message: "No current orders found !" });
+    console.error("Get current orders error:", err);
+    return res.status(500).json({ message: "Get current orders error" });
   }
 };
