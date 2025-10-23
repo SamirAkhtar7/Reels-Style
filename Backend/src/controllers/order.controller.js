@@ -650,7 +650,7 @@ exports.getOrderById = async (req, res) => {
       }).populate({
         path:"shopOrder.assignedDeliveryBoy",
         model:UserModel,
-        select:"fullName mobile"
+        select:"fullName mobile location",
       })
    .populate({
     path: "shopOrder.shopOrderItems.product",
