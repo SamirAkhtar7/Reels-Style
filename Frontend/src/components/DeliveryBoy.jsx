@@ -5,11 +5,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
+
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
+  const [showOtpBox ,setShowOtpBox] = useState (false);
    
 
   const getAssignments = async () => {
@@ -52,7 +54,15 @@ const DeliveryBoy = () => {
     catch (err) {
       console.error("Error in fetching current orders:", err);
     }
-}
+  }
+  
+
+  const handleSendOtp = () => {
+    setShowOtpBox(true);
+    // Logic to send OTP to the customer can be added here
+    
+    
+   }
 
   useEffect(() => {
     getAssignments();
@@ -136,6 +146,20 @@ const DeliveryBoy = () => {
             </div>
 
             <DeliveryBoyTracking data={currentOrders} />
+
+            
+            {!showOtpBox ?<button onClick={handleSendOtp} className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200">
+              Mark as Delivered
+            </button> : <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                <p>
+                  Enter OTP to confirm delivery:
+                </p>
+                <input type="text" placeholder="Enter OTP" className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"/>
+                <button className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200">
+                  Confirm Delivery
+                </button>
+            </div>
+            }
           </div>
         )}
       </div>
