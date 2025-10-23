@@ -185,13 +185,28 @@ exports.getUserOrders = async (req, res) => {
 
       // Keep only shopOrder entries that belong to this owner and return those orders
       const ownerOrders = orders
-        .map((order) => {
-          const o = order.toObject ? order.toObject() : order;
+        .map((orderDoc) => {
+          const o = orderDoc.toObject ? orderDoc.toObject() : orderDoc;
           const shopOrderForOwner = (o.shopOrder || []).filter(
             (s) => String(s.owner?._id ?? s.owner) === owner
           );
           if (!shopOrderForOwner.length) return null;
-          return { ...o, shopOrder: shopOrderForOwner };
+          // compute total only for this owner's shopOrder entries
+          const ownerTotal = shopOrderForOwner.reduce(
+            (sum, so) => sum + Number(so.subtotal || 0),
+            0
+          );
+          // return order object with filtered shopOrder and adjusted totals
+          return {
+            ...o,
+            shopOrder: shopOrderForOwner,
+            totalAmount: ownerTotal,
+            // optionally adjust status to reflect owner's shopOrders (choose business rule)
+            status:
+              shopOrderForOwner.length === 1
+                ? shopOrderForOwner[0].status
+                : o.status,
+          };
         })
         .filter(Boolean);
 
@@ -638,7 +653,7 @@ exports.getCurrentOrders = async (req, res) => {
 };
 
 // GET /api/order/:orderId
-exports.getOrderById = async (req, res) => { 
+exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await OrderModel.findById(orderId)
@@ -647,17 +662,19 @@ exports.getOrderById = async (req, res) => {
         path: "shopOrder.Shop",
         select: "name",
         model: ShopModel,
-      }).populate({
-        path:"shopOrder.assignedDeliveryBoy",
-        model:UserModel,
-        select:"fullName mobile location",
       })
-   .populate({
-    path: "shopOrder.shopOrderItems.product",
-    model: ItemModel,
-    select: "name image price foodType",
-   }).lean();
-    
+      .populate({
+        path: "shopOrder.assignedDeliveryBoy",
+        model: UserModel,
+        select: "fullName mobile location",
+      })
+      .populate({
+        path: "shopOrder.shopOrderItems.product",
+        model: ItemModel,
+        select: "name image price foodType",
+      })
+      .lean();
+
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -665,4 +682,4 @@ exports.getOrderById = async (req, res) => {
   } catch (err) {
     return res.status(400).json({ message: "Get order by id error" });
   }
-}
+};
