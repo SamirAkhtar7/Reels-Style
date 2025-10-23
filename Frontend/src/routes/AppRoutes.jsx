@@ -21,6 +21,7 @@ import OrderPlaced from "../pages/OrderPlaced";
 import MyOrder from "../pages/MyOrder";
 import useGetMyOrder from "../hooks/useGetMyOrder";
 import useGetUpdateLocation from "../hooks/useGetUpdateLocation"
+import TrackOrderPage from "../pages/TrackOrderPage";
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -91,6 +92,8 @@ const AppRoutes = () => {
           path="/my-orders"
           element={user ? <MyOrder /> : <Navigate to={"/signin"} />}
         />
+
+        <Route path="/track-order/:orderId" element={user ? <TrackOrderPage /> : <Navigate to={"/signin"} /> } />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>
         <Route path="/food-partner/login" element={<h1>hello</h1>}></Route> */}

@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Robust UserOrderCard
@@ -50,6 +51,7 @@ const SafeImg = ({ src, alt }) => {
 };
 
 const UserOrderCard = ({ order }) => {
+  const navigator = useNavigate();
   if (!order) return null;
 
   const merged = mergeShopOrderEntries(order.shopOrder);
@@ -141,7 +143,7 @@ const UserOrderCard = ({ order }) => {
         <div className="border-t pt-2 " />
 
         <div className="text-sm text-gray-500">
-          <button className="px-4 py-2 bg-[#ff4d2d] text-white rounded hover:bg-rose-600 transition mt-2">
+          <button onClick={()=>navigator(`/track-order/${order._id}`)} className="px-4 py-2 bg-[#ff4d2d] text-white rounded hover:bg-rose-600 transition mt-2">
             Track Order
           </button>
         </div>
