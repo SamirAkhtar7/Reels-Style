@@ -5,6 +5,7 @@ const UserModelImport = require("../models/user.model");
 const ItemModelImport = require("../models/item.model");
 const Order = require("../models/order.model");
 const DeliveryAssignment = require("../models/deliveryAssignment.model");
+const { model } = require("mongoose");
 const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
@@ -538,6 +539,7 @@ exports.acceptOrder = async (req, res) => {
   }
 };
 
+// GET /api/order/delivery/current-orders
 exports.getCurrentOrders = async (req, res) => {
   try {
     const deliveryBoyId = req.user?._id ?? req.userId;
@@ -634,3 +636,33 @@ exports.getCurrentOrders = async (req, res) => {
     return res.status(500).json({ message: "Get current orders error" });
   }
 };
+
+// GET /api/order/:orderId
+exports.getOrderById = async (req, res) => { 
+  try {
+    const { orderId } = req.params;
+    const order = await OrderModel.findById(orderId)
+      .populate({ path: "user", model: UserModel, select: "-password" })
+      .populate({
+        path: "shopOrder.Shop",
+        select: "name",
+        model: ShopModel,
+      }).populate({
+        path:"shopOrder.assignedDeliveryBoy",
+        model:UserModel,
+        select:"fullName mobile"
+      })
+   .populate({
+    path: "shopOrder.shopOrderItems.product",
+    model: ItemModel,
+    select: "name image price foodType",
+   }).lean();
+    
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    return res.status(200).json({ order });
+  } catch (err) {
+    return res.status(400).json({ message: "Get order by id error" });
+  }
+}
