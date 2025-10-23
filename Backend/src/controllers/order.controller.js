@@ -564,6 +564,24 @@ exports.getCurrentOrders = async (req, res) => {
             model: UserModel,
             select: "fullName email mobile location",
           },
+          {
+            // populate shop subdocs inside shopOrder -> Shop.name
+            path: "shopOrder.Shop",
+            model: ShopModel,
+            select: "name",
+          },
+          {
+            // populate product inside each shopOrder.shopOrderItems
+            path: "shopOrder.shopOrderItems.product",
+            model: ItemModel,
+            select: "name image price",
+          },
+          {
+            // populate assigned delivery boy if present
+            path: "shopOrder.assignedDeliveryBoy",
+            model: UserModel,
+            select: "fullName mobile",
+          },
         ],
       });
 

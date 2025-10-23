@@ -10,7 +10,7 @@ const OwnerDashboard = () => {
   const navigate = useNavigate();
   const myShopData = useSelector((state) => state.owner?.myShopData);
 
-
+//console.log("OwnerDashboard myShopData items:", myShopData);
 
 
   // console.log("OwnerDashboard myShopData:", myShopData);

@@ -9,9 +9,11 @@ import axios from "axios";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { userData, city ,cartItems} = useSelector(state => state?.user)
+  const { userData, city, cartItems, myOrders } = useSelector(
+    (state) => state?.user
+  );
   const  myShopData  = useSelector((state) => state?.owner?.myShopData);
-// console.log("Navbar myShopData:", myShopData);
+ //console.log("Navbar My Order ShopData:", myOrders);
 
 //console.log("Navbar userData cartItem: ",cartItems);
 
@@ -90,7 +92,7 @@ const Navbar = () => {
             >
               <FiClipboard size={22} className="text-[#ff4d2d]" />
               <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
-                2
+                {myOrders?.length}
               </span>
             </div>
           </>

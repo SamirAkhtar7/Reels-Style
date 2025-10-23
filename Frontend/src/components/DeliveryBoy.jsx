@@ -3,11 +3,13 @@ import Navbar from "./Navbar";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
   const [availableAssignments, setAvailableAssignments] = useState(null);
+  const [currentOrders, setCurrentOrders] = useState(null);
    
 
   const getAssignments = async () => {
@@ -17,7 +19,7 @@ const DeliveryBoy = () => {
         withCredentials: true,
       });
       setAvailableAssignments(response.data);
-      console.log("DeliveryBoy assignments:", response.data);
+      //console.log("DeliveryBoy assignments:", response.data);
     } catch (err) {
       console.error(
         "Error in fetching assignments:",
@@ -32,7 +34,7 @@ const DeliveryBoy = () => {
       const response = await axios.get(`/api/order/accept-order/${assignmentId}`, {
         withCredentials: true,
       });
-      console.log("Order accepted:", response.data);
+      //console.log("Order accepted:", response.data);
       await getCurrentOrder();
     }
     catch (err) {
@@ -44,14 +46,13 @@ const DeliveryBoy = () => {
     try { 
       const response = await axios.get(`/api/order/get-current-orders`, { withCredentials: true })
       console.log("Current Orders:", response.data);
+      setCurrentOrders(response.data);
       
     }
     catch (err) {
       console.error("Error in fetching current orders:", err);
     }
 }
-
-
 
   useEffect(() => {
     getAssignments();
@@ -77,47 +78,66 @@ const DeliveryBoy = () => {
 
         {/*  AvailableAssignments */}
 
-        <div className="bg-white rounded-2xl p-5 shadow-md w-[80%] border border-orange-100 ">
-          <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
-            {" "}
-            Availble Orders{" "}
-          </h1>
-          <div className="space-y-4">
-            {availableAssignments && availableAssignments.length > 0 ? (
-              availableAssignments.map((assignment, index) => (
-                <div
-                  className="border rounded-lg p-4 flex justify-between items-center "
-                  key={index}
-                >
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {assignment?.shopName}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      <span className="font-semibold">Delivery Address :</span>
-                      {assignment?.deliveryAddress.text}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {assignment.items.length}
-                      items | ₹{assignment?.subtotal}
-                    </p>
-                  </div>
+        {!currentOrders && (
+          <div className="bg-white rounded-2xl p-5 shadow-md w-[80%] border border-orange-100 ">
+            <h1 className="text-xl font-bold mb-4 flex items-center gap-2">
+              {" "}
+              Availble Orders{" "}
+            </h1>
 
-                  <button
-                    onClick={() => acceptOrder(assignment.assignmentId)}
-                    className="bg-orange-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-orange-600 "
+            <div className="space-y-4">
+              {availableAssignments && availableAssignments.length > 0 ? (
+                availableAssignments.map((assignment, index) => (
+                  <div
+                    className="border rounded-lg p-4 flex justify-between items-center "
+                    key={index}
                   >
-                    Accept
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 ">
-                No available orders at the moment.
-              </p>
-            )}
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {assignment?.shopName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-semibold">
+                          Delivery Address :
+                        </span>
+                        {assignment?.deliveryAddress.text}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {assignment.items.length}
+                        items | ₹{assignment?.subtotal}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => acceptOrder(assignment.assignmentId)}
+                      className="bg-orange-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-orange-600 "
+                    >
+                      Accept
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 ">
+                  No available orders at the moment.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {currentOrders && (
+          <div className="bg-white rounded-2xl p-5 shadow-md w-[80%] border border-orange-100 ">
+            <h2 className="text-lg font-bold mb-3 ">📦 Current Order</h2>
+
+            <div className="border rounded-lg p-4 mb-3 ">
+              <p className=" font-semibold text-sm ">{currentOrders.shopOrder?.Shop?.name}</p>
+              <p className="text-sm text-gray-500">{currentOrders?.deliveryAddress?.text}</p>
+              <p className="text-xs text-gray-400">{currentOrders?.shopOrder?.shopOrderItems.length} items | ₹{currentOrders?.shopOrder?.subtotal }</p>
+            </div>
+
+            <DeliveryBoyTracking data={currentOrders} />
+          </div>
+        )}
       </div>
     </div>
   );
