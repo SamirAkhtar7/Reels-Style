@@ -51,4 +51,9 @@ router.get(
   orderController.getOrderById
 );
 
+// New route to send delivery OTP
+router.post("/send-delivery-otp", authMiddleware.authUserMiddleware, orderController.sendDeliveryOtp);
+// New route to verify delivery OTP
+router.post("/verify-delivery-otp",authMiddleware.authUserMiddleware , orderController.verifyDeliveryOtp);
+
 module.exports = router;
