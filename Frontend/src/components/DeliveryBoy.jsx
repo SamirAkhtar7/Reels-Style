@@ -1,18 +1,17 @@
-import React, { useEffect ,useState} from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
-
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
-  const [showOtpBox ,setShowOtpBox] = useState (false);
-   
+  const [showOtpBox, setShowOtpBox] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const getAssignments = async () => {
     if (!userData) return; // wait until auth is ready
@@ -31,43 +30,87 @@ const DeliveryBoy = () => {
     }
   };
 
-  const acceptOrder = async (assignmentId) => { 
-    try { 
-      const response = await axios.get(`/api/order/accept-order/${assignmentId}`, {
-        withCredentials: true,
-      });
+  const acceptOrder = async (assignmentId) => {
+    try {
+      const response = await axios.get(
+        `/api/order/accept-order/${assignmentId}`,
+        {
+          withCredentials: true,
+        }
+      );
       //console.log("Order accepted:", response.data);
       await getCurrentOrder();
-    }
-    catch (err) {
+    } catch (err) {
       console.error("Error in accepting order:", err);
     }
-  }
+  };
+
+  const sendOtp = async () => {
+    try {
+      const response = await axios.post(
+        `/api/order/send-delivery-otp`,
+        {
+          orderId: currentOrders._id,
+          shopOrderId: currentOrders.shopOrder._id,
+        },
+        { withCredentials: true }
+      );
+      setShowOtpBox(true);
+      //console.log("Order accepted:", response.data);
+      console.log(response.data.message);
+    } catch (err) {
+      console.error("Error in accepting order:", err);
+    }
+  };
+
+  const verifyOtp = async () => {
+    // basic validation
+    const entered = (otp || "").toString().trim();
+    if (!entered || entered.length < 4 || !/^\d{4,6}$/.test(entered)) {
+      return alert("Please enter a valid OTP (4-6 digits).");
+    }
+
+    try {
+      const response = await axios.post(
+        `/api/order/verify-delivery-otp`,
+        {
+          orderId: currentOrders._id,
+          shopOrderId: currentOrders.shopOrder._id,
+          otp: entered,
+        },
+        { withCredentials: true }
+      );
+
+      console.log("Verify OTP:", response.data.message);
+      // success UI updates
+      setShowOtpBox(false);
+      setOtp("");
+      // refresh data
+      await getCurrentOrder();
+      await getAssignments();
+      alert(response.data.message || "Delivery confirmed");
+    } catch (err) {
+      const payload = err?.response?.data ?? err;
+      console.error("Verify OTP error:", payload);
+      alert(payload?.message || "Failed to verify OTP. Please try again.");
+    }
+  };
 
   const getCurrentOrder = async () => {
-    try { 
-      const response = await axios.get(`/api/order/get-current-orders`, { withCredentials: true })
+    try {
+      const response = await axios.get(`/api/order/get-current-orders`, {
+        withCredentials: true,
+      });
       console.log("Current Orders:", response.data);
       setCurrentOrders(response.data);
-      
-    }
-    catch (err) {
+    } catch (err) {
       console.error("Error in fetching current orders:", err);
     }
-  }
-  
-
-  const handleSendOtp = () => {
-    setShowOtpBox(true);
-    // Logic to send OTP to the customer can be added here
-    
-    
-   }
+  };
 
   useEffect(() => {
     getAssignments();
-   getCurrentOrder(); 
-     
+    getCurrentOrder();
   }, [userData]);
 
   return (
@@ -140,26 +183,98 @@ const DeliveryBoy = () => {
             <h2 className="text-lg font-bold mb-3 ">📦 Current Order</h2>
 
             <div className="border rounded-lg p-4 mb-3 ">
-              <p className=" font-semibold text-sm ">{currentOrders.shopOrder?.Shop?.name}</p>
-              <p className="text-sm text-gray-500">{currentOrders?.deliveryAddress?.text}</p>
-              <p className="text-xs text-gray-400">{currentOrders?.shopOrder?.shopOrderItems.length} items | ₹{currentOrders?.shopOrder?.subtotal }</p>
+              <p className=" font-semibold text-sm ">
+                {currentOrders.shopOrder?.Shop?.name}
+              </p>
+              <p className="text-sm text-gray-500">
+                {currentOrders?.deliveryAddress?.text}
+              </p>
+              <p className="text-xs text-gray-400">
+                {currentOrders?.shopOrder?.shopOrderItems.length} items | ₹
+                {currentOrders?.shopOrder?.subtotal}
+              </p>
             </div>
 
-            <DeliveryBoyTracking data={currentOrders} />
+            {(() => {
+              // build the exact shape DeliveryBoyTracking expects
+              const deliveryAddrLat = Number.parseFloat(
+                currentOrders?.deliveryAddress?.latitude
+              );
+              const deliveryAddrLng = Number.parseFloat(
+                currentOrders?.deliveryAddress?.longitude
+              );
 
-            
-            {!showOtpBox ?<button onClick={handleSendOtp} className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200">
-              Mark as Delivered
-            </button> : <div className="mt-4 p-4 border rounded-xl bg-gray-50">
-                <p>
-                  Enter OTP to confirm delivery:
-                </p>
-                <input type="text" placeholder="Enter OTP" className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"/>
-                <button className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200">
+              // primary source: backend-provided deliveryBoyLocation (lat/lon)
+              let dbLat = Number.parseFloat(
+                currentOrders?.deliveryBoyLocation?.lat
+              );
+              let dbLng = Number.parseFloat(
+                currentOrders?.deliveryBoyLocation?.lon
+              );
+
+              // fallback: populated assignedDeliveryBoy on shopOrder subdoc
+              if (!Number.isFinite(dbLat) || !Number.isFinite(dbLng)) {
+                const assigned =
+                  currentOrders?.shopOrder?.assignedDeliveryBoy ??
+                  currentOrders?.shopOrder?.[0]?.assignedDeliveryBoy;
+                const coords = assigned?.location?.coordinates;
+                dbLng = Number.parseFloat(coords?.[0]);
+                dbLat = Number.parseFloat(coords?.[1]);
+              }
+
+              const hasCoords =
+                Number.isFinite(deliveryAddrLat) &&
+                Number.isFinite(deliveryAddrLng) &&
+                Number.isFinite(dbLat) &&
+                Number.isFinite(dbLng);
+
+              if (!hasCoords) {
+                return (
+                  <p className="text-sm text-gray-500">
+                    Tracking unavailable — missing or invalid location data
+                  </p>
+                );
+              }
+
+              return (
+                <DeliveryBoyTracking
+                  data={{
+                    deliveryAddress: {
+                      lat: deliveryAddrLat,
+                      lng: deliveryAddrLng,
+                    },
+                    deliveryBoyLocation: { lat: dbLat, lng: dbLng },
+                  }}
+                />
+              );
+            })()}
+
+            {!showOtpBox ? (
+              <button
+                onClick={sendOtp}
+                className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
+              >
+                Mark as Delivered
+              </button>
+            ) : (
+              <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                <p>Enter OTP to confirm delivery:</p>
+                <input
+                  onChange={(e) => {
+                    setOtp(e.target.value);
+                  }}
+                  type="text"
+                  placeholder="Enter OTP"
+                  className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+                <button
+                  onClick={verifyOtp}
+                  className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
+                >
                   Confirm Delivery
                 </button>
-            </div>
-            }
+              </div>
+            )}
           </div>
         )}
       </div>

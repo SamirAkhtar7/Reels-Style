@@ -688,28 +688,79 @@ exports.getOrderById = async (req, res) => {
 exports.sendDeliveryOtp = async (req, res) => {
   try {
     const { orderId, shopOrderId } = req.body;
-    const order = await OrderModel.findById(orderId).populate("user");
+    if (!orderId || !shopOrderId) {
+      return res
+        .status(400)
+        .json({ message: "orderId and shopOrderId are required" });
+    }
+
+    // load order without populate to avoid model name mismatch issues
+    const order = await OrderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    const shopOrder = order.shopOrder.id(shopOrderId);
+
+    // safe shopOrder lookup (supports mongoose subdoc id() helper or manual find)
+    const shopOrder =
+      typeof order.shopOrder.id === "function"
+        ? order.shopOrder.id(shopOrderId)
+        : (order.shopOrder || []).find(
+            (so) => String(so._id) === String(shopOrderId)
+          );
+
     if (!shopOrder) {
       return res.status(404).json({ message: "Shop order not found" });
     }
-    // Logic to generate and send OTP to customer
-    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+
+    // generate OTP and save on the shopOrder subdoc
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
     shopOrder.deliveryOtp = generatedOtp;
-    shopOrder.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+    shopOrder.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await order.save();
 
-    await sendDeliveryOtpEmail(order.user, generatedOtp);
-    return res
-      .status(200)
-      .json({
-        message: `Delivery OTP sent successfully ,${order?.user?.fullName}`,
-      });
+    // Try to resolve user document explicitly (avoid populate-model name issues)
+    let userDoc = null;
+    if (order.user && typeof order.user === "object" && order.user.email) {
+      userDoc = order.user;
+    } else if (order.user) {
+      userDoc = await UserModel.findById(order.user).select(
+        "fullName email mobile"
+      );
+    }
+
+    if (userDoc && userDoc.email) {
+      try {
+        await sendDeliveryOtpEmail(userDoc, generatedOtp);
+        return res.status(200).json({
+          message: `Delivery OTP sent successfully to ${
+            userDoc.fullName || userDoc.email
+          }`,
+        });
+      } catch (emailErr) {
+        console.error("sendDeliveryOtp: failed to send email", emailErr);
+        return res.status(500).json({
+          message: "Failed to send OTP email",
+          error:
+            emailErr && emailErr.message ? emailErr.message : String(emailErr),
+        });
+      }
+    }
+
+    // OTP saved but no email to send to
+    console.warn("sendDeliveryOtp: user email not available, OTP saved only", {
+      orderId,
+      shopOrderId,
+    });
+    return res.status(200).json({
+      message:
+        "OTP generated and saved, but user email is not available to send.",
+    });
   } catch (err) {
-    return res.status(500).json({ message: "Send delivery OTP error" });
+    console.error("Send delivery OTP error:", err);
+    return res.status(500).json({
+      message: "Send delivery OTP error",
+      error: err && err.message ? err.message : String(err),
+    });
   }
 };
 
@@ -717,44 +768,108 @@ exports.sendDeliveryOtp = async (req, res) => {
 exports.verifyDeliveryOtp = async (req, res) => {
   try {
     const { orderId, shopOrderId, otp } = req.body;
-    const order = await OrderModel.findById(orderId).populate("user");
+    if (!orderId || !shopOrderId || !otp) {
+      return res
+        .status(400)
+        .json({ message: "orderId, shopOrderId and otp are required" });
+    }
+
+    // load order without populate to avoid model name/populate issues
+    const order = await OrderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    const shopOrder = order.shopOrder.id(shopOrderId);
+
+    // safe shopOrder lookup (supports mongoose subdoc id() helper or manual find)
+    const shopOrder =
+      typeof order.shopOrder.id === "function"
+        ? order.shopOrder.id(shopOrderId)
+        : (order.shopOrder || []).find(
+            (so) => String(so._id) === String(shopOrderId)
+          );
+
     if (!shopOrder) {
       return res.status(404).json({ message: "Shop order not found" });
     }
-    // Verify OTP
-    if (shopOrder.deliveryOtp !== otp) {
+
+    // normalize and validate OTP format
+    const providedOtp = String(otp).trim();
+    if (!/^\d{4,6}$/.test(providedOtp)) {
+      return res.status(400).json({ message: "Invalid OTP format" });
+    }
+
+    if (!shopOrder.deliveryOtp) {
+      return res
+        .status(400)
+        .json({ message: "No OTP generated for this shop order" });
+    }
+
+    if (String(shopOrder.deliveryOtp) !== providedOtp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
-    if (new Date() > shopOrder.otpExpires) {
+
+    if (shopOrder.otpExpires && new Date() > new Date(shopOrder.otpExpires)) {
       return res.status(400).json({ message: "OTP has expired" });
     }
-    // OTP is valid
+
+    // OTP is valid — mark delivered for this shopOrder
     shopOrder.deliveryOtp = null;
     shopOrder.otpExpires = null;
-
-    order.status = "Delivered";
-
+    shopOrder.status = "Delivered";
     shopOrder.deliveredAt = new Date();
-    order.deliveredAt = new Date();
+
+    // determine if all shopOrders are delivered -> mark order delivered
+    const allDelivered = (order.shopOrder || []).every((so) =>
+      String(so._id) === String(shopOrder._id)
+        ? so.status === "Delivered"
+        : so.status === "Delivered"
+    );
+
+    if (allDelivered) {
+      order.status = "Delivered";
+      order.deliveredAt = new Date();
+    }
 
     await order.save();
 
-    await DeliveryAssignment.deleteOne({
-      order: order._id,
-      shopOrder: shopOrder._id,
-      assignedTo: shopOrder.assignedDeliveryBoy
-    });
-
-    return res
-      .status(200)
-      .json({
-        message: `Delivery OTP verified successfully ,${order?.user?.fullName}`,
+    // remove any delivery assignment for this shopOrder (if exists)
+    try {
+      await DeliveryAssignment.deleteOne({
+        order: order._id,
+        shopOrder: shopOrder._id,
+        assignedTo: shopOrder.assignedDeliveryBoy,
       });
+    } catch (delErr) {
+      console.warn(
+        "verifyDeliveryOtp: failed to delete assignment (non-fatal)",
+        delErr
+      );
+    }
+
+    // resolve user name/email for response without relying on populate
+    let userDoc = null;
+    if (order.user && typeof order.user === "object" && order.user.fullName) {
+      userDoc = order.user;
+    } else if (order.user) {
+      try {
+        userDoc = await UserModel.findById(order.user).select("fullName email");
+      } catch (uErr) {
+        // non-fatal: continue without user info
+      }
+    }
+
+    return res.status(200).json({
+      message: `Delivery OTP verified successfully${
+        userDoc?.fullName ? ", " + userDoc.fullName : ""
+      }`,
+      orderId: order._id,
+      shopOrderId: shopOrder._id,
+    });
   } catch (err) {
-    return res.status(500).json({ message: "Verify delivery OTP error" });
+    console.error("Verify delivery OTP error:", err);
+    return res.status(500).json({
+      message: "Verify delivery OTP error",
+      error: err && err.message ? err.message : String(err),
+    });
   }
 };
