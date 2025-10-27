@@ -6,6 +6,7 @@ const ItemModelImport = require("../models/item.model");
 const Order = require("../models/order.model");
 const DeliveryAssignment = require("../models/deliveryAssignment.model");
 const { model } = require("mongoose");
+const { sendDeliveryOtpEmail } = require("../utils/mail");
 const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
@@ -681,5 +682,79 @@ exports.getOrderById = async (req, res) => {
     return res.status(200).json({ order });
   } catch (err) {
     return res.status(400).json({ message: "Get order by id error" });
+  }
+};
+
+exports.sendDeliveryOtp = async (req, res) => {
+  try {
+    const { orderId, shopOrderId } = req.body;
+    const order = await OrderModel.findById(orderId).populate("user");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const shopOrder = order.shopOrder.id(shopOrderId);
+    if (!shopOrder) {
+      return res.status(404).json({ message: "Shop order not found" });
+    }
+    // Logic to generate and send OTP to customer
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+    shopOrder.deliveryOtp = generatedOtp;
+    shopOrder.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+    await order.save();
+
+    await sendDeliveryOtpEmail(order.user, generatedOtp);
+    return res
+      .status(200)
+      .json({
+        message: `Delivery OTP sent successfully ,${order?.user?.fullName}`,
+      });
+  } catch (err) {
+    return res.status(500).json({ message: "Send delivery OTP error" });
+  }
+};
+
+// POST /api/order/delivery/verify-otp
+exports.verifyDeliveryOtp = async (req, res) => {
+  try {
+    const { orderId, shopOrderId, otp } = req.body;
+    const order = await OrderModel.findById(orderId).populate("user");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    const shopOrder = order.shopOrder.id(shopOrderId);
+    if (!shopOrder) {
+      return res.status(404).json({ message: "Shop order not found" });
+    }
+    // Verify OTP
+    if (shopOrder.deliveryOtp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (new Date() > shopOrder.otpExpires) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+    // OTP is valid
+    shopOrder.deliveryOtp = null;
+    shopOrder.otpExpires = null;
+
+    order.status = "Delivered";
+
+    shopOrder.deliveredAt = new Date();
+    order.deliveredAt = new Date();
+
+    await order.save();
+
+    await DeliveryAssignment.deleteOne({
+      order: order._id,
+      shopOrder: shopOrder._id,
+      assignedTo: shopOrder.assignedDeliveryBoy
+    });
+
+    return res
+      .status(200)
+      .json({
+        message: `Delivery OTP verified successfully ,${order?.user?.fullName}`,
+      });
+  } catch (err) {
+    return res.status(500).json({ message: "Verify delivery OTP error" });
   }
 };

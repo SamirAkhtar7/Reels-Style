@@ -68,6 +68,18 @@ const shopOrderSchema = new mongoose.Schema(
       ref: "DeliveryAssignment",
       default: null,
     },
+    deliveryOtp: {
+      type: String,
+      default: null,
+    },
+    otpExpires: {
+      type: Date,
+      default: null,
+    },
+    deliveredAt: {
+      type: Date,
+      default: null,
+    }
   },
   {
     timestamps: true,
