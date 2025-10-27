@@ -102,9 +102,8 @@ const TrackOrderPage = () => {
               <p className="text-green-600 font-semibold">Order Delivered</p>
             )}
 
-            {/* Render tracking only when assignedDeliveryBoy exists.
-                Pass safe lat/lng values (may be null) */}
-            {assignedDB && (
+            {/* Render tracking only when assignedDeliveryBoy exists and order not delivered */}
+            {assignedDB && currentOrder?.order?.status !== "Delivered" && (
               <div>
                 <DeliveryBoyTracking
                   data={{
@@ -112,10 +111,7 @@ const TrackOrderPage = () => {
                       lat: deliveryAddrLat,
                       lng: deliveryAddrLng,
                     },
-                    deliveryBoyLocation: {
-                      lat: dbLat,
-                      lng: dbLng,
-                    },
+                    deliveryBoyLocation: { lat: dbLat, lng: dbLng },
                   }}
                 />
               </div>
