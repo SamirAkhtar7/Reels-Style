@@ -1,6 +1,7 @@
 // ...existing code...
 import { createSlice } from "@reduxjs/toolkit";
 
+
 const initialState = {
   user: null,
   status: "idle",
@@ -19,6 +20,7 @@ const userSlice = createSlice({
     cartItems: [],
     totalAmount: 0,
     myOrders: [],
+    searchItems: null,
   },
   reducers: {
     // set user payload (canonical)
@@ -135,6 +137,9 @@ const userSlice = createSlice({
         status,
       });
     },
+    setSearchItems: (state, actions) => {
+      state.searchItems = actions?.payload;
+    },
     clearUser() {
       return { ...initialState };
     },
@@ -165,6 +170,7 @@ export const {
   updateOrderStatus,
   addMyOrder,
   addToCart,
+  setSearchItems,
 } = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...

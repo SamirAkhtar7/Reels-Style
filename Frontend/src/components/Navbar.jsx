@@ -3,8 +3,10 @@ import { FiSearch, FiPlus, FiUser,FiClipboard , FiMapPin,FiShoppingCart } from "
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user.slice";
 import { useNavigate } from "react-router-dom";
+import { setSearchItems } from "../redux/user.slice";
 
 import axios from "axios";
+import { useEffect } from "react";
 
 
 const Navbar = () => {
@@ -24,6 +26,7 @@ const Navbar = () => {
   
   const [showInfo, setShowInfo] = useState(false)
   const dispatch = useDispatch()
+  const [query , setQuery] = useState("")
 
   const handleLogout = async() => {
     try {
@@ -35,6 +38,34 @@ const Navbar = () => {
       console.error("Logout failed:", error);
     }
   }
+   const  hanldeSearchItems = async () => {
+      try {
+        const response = await axios.get(`/api/item/search-items?query=${query}&city=${city}`, {
+         
+          withCredentials: true,
+        }
+          
+        
+        );
+        console.log("Search items response:", response.data);
+       dispatch( setSearchItems(response.data.items ?? []));
+      }
+      catch (err) {
+        console.error("Search items error:", err);
+      
+          
+      }
+  }
+  
+  useEffect(() => {
+    if (query.length > 2) {
+      hanldeSearchItems();
+    }
+    else {
+      dispatch( setSearchItems([]));
+    }
+    
+  },[query])
 
   return (
     <header className=" w-screen bg-white dark:bg-slate-900/70 border-b dark:border-slate-700 shadow-sm">
@@ -63,7 +94,9 @@ const Navbar = () => {
             <div className="relative max-w-md mx-auto">
               <FiSearch className="absolute left-3 top-3 text-slate-400" />
               <input
+                onChange={(e) => setQuery(e.target.value)}
                 type="search"
+                value={query}
                 placeholder="Search reels, restaurants..."
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
                 aria-label="Search"
