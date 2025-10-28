@@ -217,7 +217,7 @@ exports.getItemByCity = async (req, res) => {
 
 exports.getItemByShop = async (req, res) => {
   try {
-    const shopId = req.params;
+    const shopId = req.params.shopId;
     const shop = await ShopModel.findById(shopId).populate("items")
     if (!shop) {
       return res.status(404).json({ message: "Shop not found " })

@@ -1,21 +1,23 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
+import { useNavigate } from "react-router-dom";
 
 import categories from "../category.js";
 import FoodCard from "./FoodCard";
 import Card from "./Card";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
+
 
 const UserDashboard = () => {
+  const navigator = useNavigate();
+  const userData = useSelector((state) => state.user.userData);
   const { ShopByCity, itemsByCity } = useSelector((state) => state.user);
   const [updatedItemsList, setUpdatedItemsList] = useState(
     () => itemsByCity?.items ?? []
   );
 
   // console.log("Shop by city from Redux :", itemsByCity); // Debugging line
-
+console.log("Items by city from Redux :", userData); // Debugging line
   const hanldeFilterByCategory = (category) => {
     if (category === "All") {
       setUpdatedItemsList(itemsByCity?.items ?? []);
@@ -30,6 +32,10 @@ const UserDashboard = () => {
   useEffect(() => {
     setUpdatedItemsList(itemsByCity?.items ?? []);
   }, [itemsByCity]);
+
+  // scroll to top on first render and reload once when userData becomes available
+  const userDataRef = useRef({ initialized: false, prev: null });
+ 
 
   return (
     <div className="w-full h-full flex flex-col gap-5 items-center overflow-y-auto scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth">
@@ -67,7 +73,11 @@ const UserDashboard = () => {
           <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Shops card container */}
             {(ShopByCity?.shops ?? []).map((shop, index) => (
-              <Card data={shop} key={shop?._id ?? index} />
+              <Card
+                data={shop}
+                key={shop?._id ?? index}
+                onClick={() => navigator(`/shop/${shop._id}`)}
+              />
             ))}
           </div>
         </div>
