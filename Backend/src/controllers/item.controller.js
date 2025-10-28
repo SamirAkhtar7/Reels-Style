@@ -3,6 +3,7 @@ const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModelImport = require("../models/item.model");
 const ItemModel = ItemModelImport.default || ItemModelImport;
 const { uploadOnCloudinary } = require("../services/cloudinary");
+const { default: Shop } = require("../models/shop.model");
 
 exports.addItem = async (req, res) => {
   try {
@@ -229,6 +230,38 @@ exports.getItemByShop = async (req, res) => {
   
     return res.status(500).json({
       message: `Get item by shop error ${err && err.message ? err.message : err}`,
+    });
+  }
+}
+
+exports.searchItems = async (req, res) => { 
+  try {
+    const { query ,city} = req.query;
+    if (!query || !city)
+      return res.status(400).json({ message: "Query and city parameters are required" });
+
+
+    const shop = await ShopModel.find({ city: { $regex: new RegExp(`^${city}$`, 'i') } }).populate("items");
+    if (!shop || shop.length === 0) {
+      return res.status(404).json({ message: "No shops found in this city" });
+    }
+    const shopIds = shop.map(s => s._id);
+    const items =  await ItemModel.find({
+      shop: { $in: shopIds },
+      $or: [
+        { name: { $regex: new RegExp(query, 'i') } },
+        { category: { $regex: new RegExp(query, 'i') } }
+      ]
+    }).populate("shop", "name image");
+
+    return res.status(200).json({ items });
+     
+  
+   }
+  catch (err) {
+   
+    return res.status(500).json({
+      message: `Search items error ${err && err.message ? err.message : err}`,
     });
   }
 }
