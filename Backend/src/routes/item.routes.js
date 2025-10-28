@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require("../middlewares/auth.middleware");
-const { addItem, editItem,getItemById,deleteItem, getItemByCity  } = require('../controllers/item.controller');
+const { addItem, editItem,getItemById,deleteItem, getItemByCity,getItemByShop  } = require('../controllers/item.controller');
 const { upload } = require('../middlewares/multer');
 
 
@@ -12,5 +12,6 @@ itemRouter.post("/edit-item/:id", authMiddleware.authUserMiddleware, upload.sing
 itemRouter.get("/get-item/:id", authMiddleware.authUserMiddleware, getItemById );
 itemRouter.get("/delete-item/:id", authMiddleware.authUserMiddleware, deleteItem );
 itemRouter.get("/get-item-by-city/:city", authMiddleware.authUserMiddleware, getItemByCity);
+itemRouter.get("/get-item-by-shop/:shopId", authMiddleware.authUserMiddleware, getItemByShop);
 
 module.exports = itemRouter;
