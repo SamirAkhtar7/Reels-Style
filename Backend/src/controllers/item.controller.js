@@ -214,3 +214,21 @@ exports.getItemByCity = async (req, res) => {
   }
   
 }
+
+exports.getItemByShop = async (req, res) => {
+  try {
+    const shopId = req.params;
+    const shop = await ShopModel.findById(shopId).populate("items")
+    if (!shop) {
+      return res.status(404).json({ message: "Shop not found " })
+    }
+
+    return res.status(200).json({shop, items: shop.items })
+
+   } catch (err) {
+  
+    return res.status(500).json({
+      message: `Get item by shop error ${err && err.message ? err.message : err}`,
+    });
+  }
+}

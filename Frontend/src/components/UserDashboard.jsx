@@ -1,18 +1,35 @@
-// ...existing code...
 import React from "react";
+import { useState } from "react";
 import Navbar from "./Navbar";
 
 import categories from "../category.js";
 import FoodCard from "./FoodCard";
 import Card from "./Card";
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
 
 const UserDashboard = () => {
   const { ShopByCity, itemsByCity } = useSelector((state) => state.user);
-  
-  
- // console.log("Shop by city from Redux :", itemsByCity); // Debugging line
+  const [updatedItemsList, setUpdatedItemsList] = useState(
+    () => itemsByCity?.items ?? []
+  );
 
+  // console.log("Shop by city from Redux :", itemsByCity); // Debugging line
+
+  const hanldeFilterByCategory = (category) => {
+    if (category === "All") {
+      setUpdatedItemsList(itemsByCity?.items ?? []);
+      return;
+    }
+    const filteredItems = (itemsByCity?.items ?? []).filter(
+      (item) => item.category === category
+    );
+    setUpdatedItemsList(filteredItems);
+  };
+
+  useEffect(() => {
+    setUpdatedItemsList(itemsByCity?.items ?? []);
+  }, [itemsByCity]);
 
   return (
     <div className="w-full h-full flex flex-col gap-5 items-center overflow-y-auto scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth">
@@ -29,7 +46,11 @@ const UserDashboard = () => {
           <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Category card container */}
             {categories.map((cat, index) => (
-              <Card data={cat} key={cat.category ?? index} />
+              <Card
+                data={cat}
+                key={cat.category ?? index}
+                onClick={() => hanldeFilterByCategory(cat.category)}
+              />
             ))}
           </div>
         </div>
@@ -45,8 +66,8 @@ const UserDashboard = () => {
         <div className="w-full p-2">
           <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Shops card container */}
-            {ShopByCity?.shops?.map((shop, index) => (
-              <Card data={shop} key={index} />
+            {(ShopByCity?.shops ?? []).map((shop, index) => (
+              <Card data={shop} key={shop?._id ?? index} />
             ))}
           </div>
         </div>
@@ -54,14 +75,12 @@ const UserDashboard = () => {
 
       {/* ...items  */}
       <div className="w-full max-w-6xl flex flex-col gap-5 justify-center  items-center">
-        <h1 className="text-3xl text-gray-800  sm:text-3xl">
-          Popular Items in your area
-        </h1>
+        <h1 className="text-3xl text-gray-800  sm:text-3xl">Popular Items</h1>
         <div className="w-full p-2">
           <div className="rounded-3xl flex gap-4 flex-nowrap overflow-x-auto items-center pb-2 pl-4 pr-4">
             {/* Items card container */}
-            {itemsByCity?.items?.map((item, index) => (
-              <FoodCard props={item} key={index} />
+            {(updatedItemsList ?? []).map((item, index) => (
+              <FoodCard props={item} key={item?._id ?? index} />
             ))}
           </div>
         </div>
@@ -71,4 +90,3 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
-// ...existing code...
