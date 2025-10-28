@@ -28,9 +28,10 @@ const RecenterMap = ({ latitude, longitude }) => {
 
 const CheckOut = () => {
   const navigate = useNavigate();
+
   const dispatch = useDispatch();
   const { location, deliveryAddress } = useSelector((state) => state.map);
-  const { cartItems, totalAmount } = useSelector((state) => state.user);
+  const { cartItems, totalAmount,userData } = useSelector((state) => state.user);
   const [addressInput, setAddressInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -65,11 +66,13 @@ const CheckOut = () => {
   };
 
   const getCurrentLocation = () => {
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
+    // navigator.geolocation.getCurrentPosition(async (position) => {
+    //   const { latitude, longitude } = position.coords;
+    const latitude = userData?.location.coordinates[1];
+    const longitude = userData?.location.coordinates[0]
       dispatch(setLocation({ latitude, longitude }));
       getAddressBylatlng(latitude, longitude);
-    });
+    // });
   };
 
   const getLatlngByAdddress = async () => {
