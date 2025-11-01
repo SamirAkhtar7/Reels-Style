@@ -103,7 +103,29 @@ exports.placeOrder = async (req, res) => {
     const shopOrder = Array.from(shopMap.values());
 
     
- 
+    if (paymentMethod === "ONLINE") { 
+      const razorpayOrder = await instance.orders.create({
+        amount: Math.round(totalAmount * 100), // amount in paise 
+        currency: "INR",
+        receipt: `receipt_order_${Date.now()}`,
+        // payment_capture: 1,
+      })
+      const order = await OrderModel.create({
+        user: user._id,
+        paymentMethod,
+        deliveryAddress: deliveryAddress || {},
+        totalAmount,
+        shopOrder,
+        razorpayOrderId: razorpayOrder.id,
+        payment :false
+      });
+
+      return res.status(201).json({
+        razorpayOrder, orderId: order._id,
+        keyId : process.env.RAZORPAY_KEY_ID
+ });
+
+    }
     
     const orderPayload = {
       user: user._id,
