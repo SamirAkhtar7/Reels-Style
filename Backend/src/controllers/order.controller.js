@@ -10,6 +10,17 @@ const { sendDeliveryOtpEmail } = require("../utils/mail");
 const UserModel = UserModelImport.default || UserModelImport;
 const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModel = ItemModelImport.default || ItemModelImport;
+const Razorpay = require("razorpay");
+const dotendv = require("dotenv");
+dotendv.config();
+
+
+
+const instance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_SECRET,
+});
+
 
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
@@ -91,13 +102,22 @@ exports.placeOrder = async (req, res) => {
 
     const shopOrder = Array.from(shopMap.values());
 
+    
+ 
+    
     const orderPayload = {
       user: user._id,
-      paymentMethod: paymentMethod || "COD",
+      paymentMethod ,
       deliveryAddress: deliveryAddress || {},
       totalAmount,
       shopOrder,
     };
+    
+    
+
+
+
+
 
     const order = await OrderModel.create(orderPayload);
 
@@ -873,3 +893,6 @@ exports.verifyDeliveryOtp = async (req, res) => {
     });
   }
 };
+
+
+
