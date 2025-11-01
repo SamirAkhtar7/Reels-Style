@@ -167,6 +167,42 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+
+// verify Razorpay payment 
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { orderId, razorpayPaymentId } = req.body;
+    const payment = await instance.payments.fetch(razorpayPaymentId);
+    if (!payment || payment.status === "captured") {
+      return res.status(400).json({ message: "Invalid payment details" });
+    }
+    // find order by razorpayOrderId
+    const order = await OrderModel.findOne({ orderId });
+    if (!order) { 
+      return res.status(404).json({ message: "Order not found" });
+    }
+    // update order payment status
+    order.payment = true;
+    order.razorpayPaymentId = razorpayPaymentId;
+    await order.save();
+    await order.populate([
+      {
+        path: "shopOrder.shopOrderItems.product",
+        model: ItemModel,
+        select: "name image price",
+      },
+      { path: "shopOrder.Shop", select: "name" },
+      { path: "user", model: UserModel, select: "-password" },
+    ]);
+    return res.status(200).json({ message: "Payment verified successfully", order });
+   }
+  catch (err) { 
+    console.error("Verify payment error:", err);
+  }
+}
+
+
+
 // GET my-orders
 
 exports.getUserOrders = async (req, res) => {
