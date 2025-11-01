@@ -54,6 +54,8 @@ router.get(
 // New route to send delivery OTP
 router.post("/send-delivery-otp", authMiddleware.authUserMiddleware, orderController.sendDeliveryOtp);
 // New route to verify delivery OTP
-router.post("/verify-delivery-otp",authMiddleware.authUserMiddleware , orderController.verifyDeliveryOtp);
+router.post("/verify-delivery-otp", authMiddleware.authUserMiddleware, orderController.verifyDeliveryOtp);
+// New route to verify payment
+router.post("/verify-payment", authMiddleware.authUserMiddleware, orderController.verifyPayment);
 
 module.exports = router;
