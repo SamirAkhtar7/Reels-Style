@@ -13,14 +13,19 @@ connectDb();
 // Allow CORS from any origin for testing purposes
 
 // Attach middleware to the Express app (not the raw HTTP server)
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: "http://localhost:5173", // your frontend URL
+  credentials: true
+}));
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
+    credentials: true,
     methods: ["GET", "POST"],
   },
-})
+});
+
 
 app.set("io", io);
 
@@ -28,5 +33,5 @@ app.set("io", io);
 //port is 3000 is running
  socketHandler(io);
 server.listen(PORT, () => {
-  console.log("Server is runnning on port 3000");
+  console.log(`Server is runnning on port ${PORT} `);
 });

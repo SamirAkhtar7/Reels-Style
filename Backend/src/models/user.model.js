@@ -49,7 +49,11 @@ const userSchema = new mongoose.Schema(
     socketId: {
       type: String,
       default: null,
-    }
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
