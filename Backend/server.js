@@ -1,15 +1,20 @@
 //start server
-
 const dotenv = require("dotenv").config();
 const cors = require("cors");
 const app = require("./src/app");
 const connectDb = require("./src/db/db");
+const http = require("http");
+const server = http.createServer(app);
+const PORT = process.env.PORT || 3000;
 
 connectDb();
-app.use(cors({ origin: '*' }));
+// Allow CORS from any origin for testing purposes
 
-//port is 3000 is running 
+// Attach middleware to the Express app (not the raw HTTP server)
+app.use(cors({ origin: "*" }));
 
-app.listen(3000, () => {
+//port is 3000 is running
+
+server.listen(PORT, () => {
   console.log("Server is runnning on port 3000");
 });
