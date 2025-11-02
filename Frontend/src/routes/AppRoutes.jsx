@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import SignUp from "../pages/SignUp";
@@ -23,6 +23,7 @@ import useGetMyOrder from "../hooks/useGetMyOrder";
 import useGetUpdateLocation from "../hooks/useGetUpdateLocation"
 import TrackOrderPage from "../pages/TrackOrderPage";
 import Shop from "../pages/Shop";
+import { io } from "socket.io-client";
 
 const AppRoutes = () => {
   const { userData, city } = useSelector((state) => state?.user);
@@ -42,6 +43,10 @@ const AppRoutes = () => {
   // const userSlice = useSelector((state) => state.user);
 
   const user = data.userData;
+const serverUrl = import.meta.env
+  useEffect(() => {
+  io.s
+},[])
 
   return (
     <Router>

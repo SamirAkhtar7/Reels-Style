@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
+    socketId: {
+      type: String,
+      default: null,
+    }
   },
   {
     timestamps: true,

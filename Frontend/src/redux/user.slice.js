@@ -21,6 +21,7 @@ const userSlice = createSlice({
     totalAmount: 0,
     myOrders: [],
     searchItems: null,
+    socket:null,
   },
   reducers: {
     // set user payload (canonical)
@@ -92,6 +93,10 @@ const userSlice = createSlice({
 
     setMyOrders: (state, actions) => {
       state.myOrders = actions?.payload;
+    },
+
+    setSocket: (state, actions) => {
+      state.socket = actions?.payload;
     },
 
     addMyOrder: (state, actions) => {
@@ -171,6 +176,7 @@ export const {
   addMyOrder,
   addToCart,
   setSearchItems,
+  setSocket,
 } = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...
