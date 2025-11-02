@@ -65,4 +65,4 @@ uploads/*
 
 # Optional: OS swap files
 *.swp
-*~
+*~ 
