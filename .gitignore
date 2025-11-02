@@ -1,0 +1,65 @@
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Environment files (do not commit secret keys)
+.env
+.env.*
+.env.local
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build / bundler output
+dist/
+build/
+out/
+.vite/
+.cache/
+.cache-loader/
+coverage/
+
+# Frontend
+Frontend/dist/
+Frontend/.vite/
+Frontend/node_modules/
+
+# Backend
+Backend/node_modules/
+Backend/public/uploads/
+public/uploads/
+uploads/
+uploads/*
+
+# Ignore environment files in subfolders explicitly
+Backend/.env
+Frontend/.env
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Certificates/keys
+*.pem
+*.key
+*.crt
+
+# Temporary
+*.tmp
+*.temp
+*.log
+*.lock
+*.swp
+*~
