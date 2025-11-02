@@ -31,6 +31,9 @@ const SafeImg = ({ src, alt }) => {
 const OwnerOrderCard = ({ order }) => {
   const dispatch = useDispatch();
 
+  //console.log("Rendering OwnerOrderCard", order);
+
+  
   const [availableDeliveryBoys, setAvailableDeliveryBoys] = useState([]);
   console.log(" OrderCard order:", order);
   if (!order) return null;
@@ -66,6 +69,23 @@ const OwnerOrderCard = ({ order }) => {
           <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
             <MdPhone /> <span>{order?.user?.mobile ?? "N/A"}</span>
           </p>
+          {order?.paymentMethod == "ONLINE" && order?.razorpayPaymentId && (
+            <p className="text-sm text-green-600 mt-1">
+              Payment ID: {order.razorpayPaymentId}
+            </p>
+          )}
+
+          <p className="text-sm text-gray-600 mt-1">
+            Payment Method: {order?.paymentMethod ?? "N/A"}
+           
+          </p>
+          {/* <p>
+          {  order.payment===true ? (
+              <span className="text-sm text-green-600 mt-1">Payment: Completed</span>
+            ) : (
+              <span className="text-sm text-red-600 mt-1">Payment: Pending</span>
+            )}
+          </p> */}
         </div>
 
         <div className="text-sm text-gray-600">
@@ -101,6 +121,7 @@ const OwnerOrderCard = ({ order }) => {
                       const title = it?.name ?? product?.name ?? "Item";
                       const qty = it?.quantity ?? 0;
                       const price = it?.price ?? product?.price ?? 0;
+                      // const paymentStatus = it.paymentMethod?? product?.paymentMethod ?? "N/A";
 
                       return (
                         <div
@@ -117,6 +138,9 @@ const OwnerOrderCard = ({ order }) => {
                             <div className="text-xs text-gray-500 mt-1">
                               Qty: {qty} × ₹{price}
                             </div>
+                            {/* <div className="text-xs text-gray-500 mt-1">
+                              Payment Method: {paymentStatus}
+                            </div> */}
                           </div>
                         </div>
                       );
