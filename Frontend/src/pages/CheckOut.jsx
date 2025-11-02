@@ -122,16 +122,59 @@ const CheckOut = () => {
       const result = await axios.post(`/api/order/place-order`, payload, {
         withCredentials: true,
       });
+    
+      if (paymentMethod === "COD") {
+
+        dispatch(addMyOrder(result.data?.order ?? null));
+        setLoading(false);
+        navigate("/order-placed");
+      }
+      else {
+        const orderId = result.data?.order?.orderId;
+        const razorOrder = result.data?.order?.razorpayOrder;
+        openRazorpayWindow(orderId, razorOrder);
+        
+
+       }
 
       // dispatch the created order (backend returns { order })
-      dispatch(addMyOrder(result.data?.order ?? null));
-      setLoading(false);
-      navigate("/order-placed");
     } catch (error) {
       console.error("Error placing order:", error);
       setLoading(false);
     }
   };
+
+
+  const openRazorpayWindow = (orderId, razorOrder) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: razorOrder.amount,
+      currency: razorOrder.currency,
+      name: "Reels-Style",
+      description: "Complete your payment",
+      order_id: razorOrder.id,
+      handler: async function (response) {
+        try {
+          const response = await axios.post('/api/order/verify-payment', {
+            orderId,
+            razorpayPaymentId: response.razorpay_payment_id,
+           
+          },{ withCredentials: true } );
+          dispatch(addMyOrder(response.data?.order ?? null));
+          setLoading(false);
+          navigate("/order-placed");
+
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+          setLoading(false);
+        }
+      }
+    };
+        
+    const rzp = new window.Razorpay(options)
+    rzp.open();
+    
+  }
   // use numeric latitude/longitude from your map slice (latitude / longitude)
   const hasCoords =
     location &&
@@ -245,11 +288,11 @@ const CheckOut = () => {
             </div>
             <div
               className={`flex items-center gap-3 rounded-xl border p-4 text-left transition ${
-                paymentMethod === "Online Payment"
+                paymentMethod === "ONLINE"
                   ? "border-[#ff4d2d] bg-[#ff4d2d]/10"
                   : "border-gray-300 hover:border-gray-400 dark:border-slate-700 dark:hover:border-slate-600 cursor-pointer"
               }`}
-              onClick={() => setPaymentMethod("Online Payment")}
+              onClick={() => setPaymentMethod("ONLINE")}
             >
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
                 <FaMobileScreenButton className="text-purple-700 text-xl" />
