@@ -3,13 +3,18 @@ import React, { use } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
-import axios from "axios";
+import axios from "../config/axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
-import { useDispatch } from "react-redux";  
+import { useDispatch } from "react-redux";
 
-import { setUserData } from "../redux/user.slice";
+import {
+  setUserData,
+  setCity,
+  setAddress,
+  setState,
+} from "../redux/user.slice";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -20,7 +25,7 @@ const SignUp = () => {
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const dispatch =useDispatch();
+  const dispatch = useDispatch();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -32,12 +37,51 @@ const SignUp = () => {
         `/api/auth/user/register`,
         { fullName, email, password, mobile, role },
         { withCredentials: true }
-
       );
       dispatch(setUserData(result.data));
-      
+      // populate city/address/state immediately if backend returned them
+      if (result?.data?.city) dispatch(setCity(result.data.city));
+      if (result?.data?.address) dispatch(setAddress(result.data.address));
+      if (result?.data?.state) dispatch(setState(result.data.state));
+
+      // fetch full user profile (backend may return a minimal object on register)
+      try {
+        const me = await axios.get(`/api/user/get-user`, {
+          withCredentials: true,
+        });
+        const full = me.data.user ?? me.data.userData ?? me.data;
+        if (full) {
+          dispatch(setUserData(full));
+          if (full?.city) dispatch(setCity(full.city));
+          if (full?.address) dispatch(setAddress(full.address));
+          if (full?.state) dispatch(setState(full.state));
+          console.debug("SignUp: fetched full user ->", full);
+          // proactively fetch shops/items for the city so Home renders immediately
+          try {
+            if (full?.city) {
+              const shops = await axios.get(
+                `/api/shop/get-shop-by-city/${full.city}`
+              );
+              dispatch({ type: "user/setShopByCity", payload: shops.data });
+              const items = await axios.get(
+                `/api/item/get-item-by-city/${full.city}`
+              );
+              dispatch({ type: "user/setItemsByCity", payload: items.data });
+              console.debug("SignUp: fetched shops/items for city", full.city);
+            }
+          } catch (err) {
+            console.warn(
+              "SignUp: fetching shops/items failed",
+              err?.message || err
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("SignUp: fetching full user failed", err?.message || err);
+      }
+
       console.log("Registration Success:", result.data);
-      // navigate("/signin"); // optional: uncomment to redirect after signup
+      navigate("/");
     } catch (err) {
       const resp = err.response?.data;
       let message = err.message || "Registration failed";
@@ -62,7 +106,6 @@ const SignUp = () => {
     }
   };
 
-
   const handleGoogleAuth = async () => {
     if (!mobile) {
       alert("Please enter mobile number");
@@ -74,7 +117,7 @@ const SignUp = () => {
       const firebaseResult = await signInWithPopup(auth, provider);
       const { displayName, email: firebaseEmail } = firebaseResult.user || {};
 
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         `/api/auth/user/google-auth`,
         {
           fullName: displayName,
@@ -84,8 +127,33 @@ const SignUp = () => {
         },
         { withCredentials: true }
       );
- dispatch(setUserData(data));
-      console.log("Google SignIn Success:",data);
+      dispatch(setUserData(data));
+      // populate city/address/state if backend returned them
+      if (data?.city) dispatch(setCity(data.city));
+      if (data?.address) dispatch(setAddress(data.address));
+      if (data?.state) dispatch(setState(data.state));
+
+      // fetch full profile to ensure role/city are available before navigation
+      try {
+        const me = await axios.get(`/api/user/get-user`, {
+          withCredentials: true,
+        });
+        const full = me.data.user ?? me.data.userData ?? me.data;
+        if (full) {
+          dispatch(setUserData(full));
+          if (full?.city) dispatch(setCity(full.city));
+          if (full?.address) dispatch(setAddress(full.address));
+          if (full?.state) dispatch(setState(full.state));
+          console.debug("SignUp(Google): fetched full user ->", full);
+        }
+      } catch (err) {
+        console.warn(
+          "SignUp(Google): fetching full user failed",
+          err?.message || err
+        );
+      }
+
+      console.log("Google SignIn Success:", data);
       navigate("/");
     } catch (err) {
       console.error("Google auth failed:", err);
@@ -227,7 +295,7 @@ const SignUp = () => {
               disabled={loading}
               className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-sm transition disabled:opacity-60"
             >
-              {loading ? <ClipLoader size={20}  /> : "Create account"}
+              {loading ? <ClipLoader size={20} /> : "Create account"}
             </button>
 
             <button

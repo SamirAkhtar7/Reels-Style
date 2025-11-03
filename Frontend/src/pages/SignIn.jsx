@@ -5,7 +5,12 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../config/axios";
 import { auth } from "../../firebase";
-import { setUserData } from "../redux/user.slice";
+import {
+  setUserData,
+  setCity,
+  setAddress,
+  setState,
+} from "../redux/user.slice";
 import { ClipLoader } from "react-spinners";
 
 const SignIn = () => {
@@ -30,9 +35,49 @@ const SignIn = () => {
 
       const payload = result.data?.user ?? result.data;
       dispatch(setUserData(payload));
+      console.debug("SignIn: dispatched setUserData ->", payload);
+      // if backend returned city/address info, populate store immediately so hooks can run
+      if (payload?.city) dispatch(setCity(payload.city));
+      if (payload?.address) dispatch(setAddress(payload.address));
+      if (payload?.state) dispatch(setState(payload.state));
+      // fetch full user profile (some login responses contain limited user object)
+      try {
+        const me = await axios.get(`/api/user/get-user`, {
+          withCredentials: true,
+        });
+        const full = me.data.user ?? me.data.userData ?? me.data;
+        if (full) {
+          dispatch(setUserData(full));
+          if (full?.city) dispatch(setCity(full.city));
+          if (full?.address) dispatch(setAddress(full.address));
+          if (full?.state) dispatch(setState(full.state));
+          console.debug("SignIn: fetched full user ->", full);
+          // proactively fetch shops/items for the city so Home renders immediately
+          try {
+            if (full?.city) {
+              const shops = await axios.get(
+                `/api/shop/get-shop-by-city/${full.city}`
+              );
+              dispatch({ type: "user/setShopByCity", payload: shops.data });
+              const items = await axios.get(
+                `/api/item/get-item-by-city/${full.city}`
+              );
+              dispatch({ type: "user/setItemsByCity", payload: items.data });
+              console.debug("SignIn: fetched shops/items for city", full.city);
+            }
+          } catch (err) {
+            console.warn(
+              "SignIn: fetching shops/items failed",
+              err?.message || err
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("SignIn: fetching full user failed", err?.message || err);
+      }
+
       // navigate after store update so Home reads new user immediately
       navigator("/", { replace: true });
-    setTimeout(() => window.location.reload(), 100);
       console.log("Login Success:", result.data);
     } catch (err) {
       // prefer detailed server validation errors when available
@@ -71,6 +116,31 @@ const SignIn = () => {
         { withCredentials: true }
       );
       dispatch(setUserData(data));
+      // populate city/address/state if backend returned them
+      if (data?.city) dispatch(setCity(data.city));
+      if (data?.address) dispatch(setAddress(data.address));
+      if (data?.state) dispatch(setState(data.state));
+
+      // fetch full profile to ensure role/city are available before navigation
+      try {
+        const me = await axios.get(`/api/user/get-user`, {
+          withCredentials: true,
+        });
+        const full = me.data.user ?? me.data.userData ?? me.data;
+        if (full) {
+          dispatch(setUserData(full));
+          if (full?.city) dispatch(setCity(full.city));
+          if (full?.address) dispatch(setAddress(full.address));
+          if (full?.state) dispatch(setState(full.state));
+          console.debug("SignIn(Google): fetched full user ->", full);
+        }
+      } catch (err) {
+        console.warn(
+          "SignIn(Google): fetching full user failed",
+          err?.message || err
+        );
+      }
+
       console.log("Google SignIn Success:", data);
       navigator("/");
     } catch (err) {
