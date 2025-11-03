@@ -41,7 +41,7 @@ const CartPage = () => {
             </div>
             <div className="mt-6 bg-white p-4 rounded-xl shadow flex justify-between items-center border">
               <h1> Totel Amount : </h1>
-              <span>₹ {totalAmount}</span>
+              <span>₹ {totalAmount} hello</span>
             </div>
             <div className=" mt-4">
               <button

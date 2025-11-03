@@ -20,7 +20,7 @@ const userSlice = createSlice({
     totalAmount: 0,
     myOrders: [],
     searchItems: null,
-  // socket: null, // REMOVE socket from state
+    // socket: null, // REMOVE socket from state
   },
   reducers: {
     // set user payload (canonical)
@@ -59,6 +59,10 @@ const userSlice = createSlice({
       const existingItem = state.cartItems.find((i) => i.id == cartItem.id);
       if (Number(cartItem.quantity) === 0) {
         state.cartItems = state.cartItems.filter((i) => i.id != cartItem.id);
+        state.totalAmount = state.cartItems.reduce(
+          (sum, i) => sum + i.price * i.quantity,
+          0
+        );
         return;
       }
       if (existingItem) {
@@ -66,7 +70,8 @@ const userSlice = createSlice({
       } else {
         state.cartItems.push(cartItem);
       }
-      console.log(state.cartItems);
+      console.log("zyvjsfjsj", state.cartItems);
+
       state.totalAmount = state.cartItems.reduce(
         (sum, i) => sum + i.price * i.quantity,
         0
@@ -82,6 +87,10 @@ const userSlice = createSlice({
 
       if (item.quantity == 0) {
         state.cartItems = state.cartItems.filter((i) => i.id !== id);
+        state.totalAmount = state.cartItems.reduce(
+          (sum, i) => sum + i.price * i.quantity,
+          0
+        );
         return;
       }
       state.totalAmount = state.cartItems.reduce(
