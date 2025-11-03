@@ -20,15 +20,12 @@ import CheckOut from "../pages/CheckOut";
 import OrderPlaced from "../pages/OrderPlaced";
 import MyOrder from "../pages/MyOrder";
 import useGetMyOrder from "../hooks/useGetMyOrder";
-import useGetUpdateLocation from "../hooks/useGetUpdateLocation"
+import useGetUpdateLocation from "../hooks/useGetUpdateLocation";
 import TrackOrderPage from "../pages/TrackOrderPage";
 import Shop from "../pages/Shop";
-import { io } from "socket.io-client";
-import { useDispatch } from "react-redux";
-import { setSocket } from "../redux/user.slice";
+import { getSocket } from "../socket";
 
 const AppRoutes = () => {
-  const dispatch = useDispatch();
   const { userData, city } = useSelector((state) => state?.user);
   useGetCurrentUser();
 
@@ -38,7 +35,7 @@ const AppRoutes = () => {
   useGetUpdateLocation();
 
   useGetMyShop();
-  useGetMyOrder()
+  useGetMyOrder();
 
   // select the actual user object (null when not logged in)
   const data = useSelector((state) => state?.user);
@@ -46,20 +43,13 @@ const AppRoutes = () => {
   // const userSlice = useSelector((state) => state.user);
 
   const user = data.userData;
-const serverUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
   useEffect(() => {
-    const socketIntance = io(serverUrl, { withCredentials: true });
-    dispatch(setSocket(socketIntance));
-    socketIntance.on("connect", () => {
-      if (userData) {
-       socketIntance.emit('identify', { userId: userData._id } );
-      }
-      
-    });
+    if (!userData) return;
+    const socket = getSocket(userData._id);
     return () => {
-      socketIntance.disconnect();
+      socket.disconnect();
     };
-  }, [userData?._id])
+  }, [userData?._id]);
 
   return (
     <Router>
@@ -112,8 +102,14 @@ const serverUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
           element={user ? <MyOrder /> : <Navigate to={"/signin"} />}
         />
 
-        <Route path="/track-order/:orderId" element={user ? <TrackOrderPage /> : <Navigate to={"/signin"} />} />
-        <Route path="/shop/:shopId" element={user?<Shop />:<Navigate to={"/signin"} />} />
+        <Route
+          path="/track-order/:orderId"
+          element={user ? <TrackOrderPage /> : <Navigate to={"/signin"} />}
+        />
+        <Route
+          path="/shop/:shopId"
+          element={user ? <Shop /> : <Navigate to={"/signin"} />}
+        />
 
         {/* <Route path="/food-partner/register" element={<h1>hello</h1>}></Route>
         <Route path="/food-partner/login" element={<h1>hello</h1>}></Route> */}

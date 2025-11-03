@@ -4,14 +4,41 @@ import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import UserOrderCard from "../components/UserOrderCard";
 import OwnerOrderCard from "../components/OwnerOrderCard";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { setMyOrders } from "../redux/user.slice";
+import { getSocket } from "../socket";
 
 const MyOrder = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { userData, myOrders } = useSelector((state) => state.user);
 
   console.log("MyOrder userData:", userData);
 
+  useEffect(() => {
+    if (!userData) return;
+    const socket = getSocket(userData._id);
 
+    const handleNewOrder = (data) => {
+      if (
+        userData.role === "owner" &&
+        Array.isArray(data?.shopOrder) &&
+        data.shopOrder.some(
+          (so) => String(so.owner?._id ?? so.owner) === String(userData._id)
+        )
+      ) {
+        // Prevent duplicates using myOrders from state
+        if (myOrders.some((o) => o._id === data._id)) return;
+        dispatch(setMyOrders([data, ...myOrders]));
+      }
+    };
+
+    socket.on("new-order", handleNewOrder);
+    return () => {
+      socket.off("new-order", handleNewOrder);
+    };
+  }, [userData, dispatch]);
   return (
     <div className="w-full min-h-screen bg-white flex justify-center p-6">
       <div className="relative w-full max-w-[800px] bg-gray-50 p-6 rounded-lg">
@@ -34,7 +61,7 @@ const MyOrder = () => {
                 <OwnerOrderCard key={order._id ?? index} order={order} />
               ) : userData?.role === "user" ? (
                 <UserOrderCard key={order._id ?? index} order={order} />
-              ) :null
+              ) : null
             )
           ) : (
             <div className="text-center text-gray-600 py-8">

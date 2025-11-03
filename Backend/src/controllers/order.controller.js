@@ -14,13 +14,10 @@ const Razorpay = require("razorpay");
 const dotendv = require("dotenv");
 dotendv.config();
 
-
-
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET,
 });
-
 
 // POST /api/order/place-order
 exports.placeOrder = async (req, res) => {
@@ -102,14 +99,13 @@ exports.placeOrder = async (req, res) => {
 
     const shopOrder = Array.from(shopMap.values());
 
-    
-    if (paymentMethod === "ONLINE") { 
+    if (paymentMethod === "ONLINE") {
       const razorpayOrder = await instance.orders.create({
-        amount: Math.round(totalAmount * 100), // amount in paise 
+        amount: Math.round(totalAmount * 100), // amount in paise
         currency: "INR",
         receipt: `receipt_order_${Date.now()}`,
         // payment_capture: 1,
-      })
+      });
       const order = await OrderModel.create({
         user: user._id,
         paymentMethod,
@@ -117,29 +113,23 @@ exports.placeOrder = async (req, res) => {
         totalAmount,
         shopOrder,
         razorpayOrderId: razorpayOrder.id,
-        payment :false
+        payment: false,
       });
 
       return res.status(201).json({
-        razorpayOrder, orderId: order._id,
-        keyId : process.env.RAZORPAY_KEY_ID
- });
-
+        razorpayOrder,
+        orderId: order._id,
+        keyId: process.env.RAZORPAY_KEY_ID,
+      });
     }
-    
+
     const orderPayload = {
       user: user._id,
-      paymentMethod ,
+      paymentMethod,
       deliveryAddress: deliveryAddress || {},
       totalAmount,
       shopOrder,
     };
-    
-    
-
-
-
-
 
     const order = await OrderModel.create(orderPayload);
 
@@ -152,7 +142,43 @@ exports.placeOrder = async (req, res) => {
       },
       { path: "shopOrder.Shop", select: "name" },
       { path: "user", model: UserModel, select: "-password" },
+      { path: "shopOrder.owner", model: UserModel, select: "socketId" },
     ]);
+
+    const io = req.app.get("io");
+    if (io) {
+      order.shopOrder.forEach((shopOrd) => {
+        const owner = shopOrd?.owner;
+        const ownerId = String(owner?._id ?? owner);
+        const ownerSocketId = owner?.socketId;
+        if (ownerSocketId) {
+          // Filter shopOrder for this owner only
+          const ownerShopOrders = order.shopOrder.filter(
+            (so) => String(so.owner?._id ?? so.owner) === ownerId
+          );
+          const ownerTotal = ownerShopOrders.reduce(
+            (sum, so) => sum + Number(so.subtotal || 0),
+            0
+          );
+          // Build payload as in getUserOrders for owner
+          const ownerOrderPayload = {
+            ...order.toObject(),
+            shopOrder: ownerShopOrders,
+            totalAmount: ownerTotal,
+            status:
+              ownerShopOrders.length === 1
+                ? ownerShopOrders[0].status
+                : order.status,
+          };
+          io.to(ownerSocketId).emit("new-order", ownerOrderPayload);
+          console.log(
+            "socket emitted to owner:",
+            ownerSocketId,
+            ownerOrderPayload
+          );
+        }
+      });
+    }
 
     return res
       .status(201)
@@ -167,8 +193,7 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
-// verify Razorpay payment 
+// verify Razorpay payment
 exports.verifyPayment = async (req, res) => {
   try {
     const { orderId, razorpayPaymentId } = req.body;
@@ -178,7 +203,7 @@ exports.verifyPayment = async (req, res) => {
     }
     // find order by razorpayOrderId
     const order = await OrderModel.findOne({ orderId });
-    if (!order) { 
+    if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
     // update order payment status
@@ -194,14 +219,13 @@ exports.verifyPayment = async (req, res) => {
       { path: "shopOrder.Shop", select: "name" },
       { path: "user", model: UserModel, select: "-password" },
     ]);
-    return res.status(200).json({ message: "Payment verified successfully", order });
-   }
-  catch (err) { 
+    return res
+      .status(200)
+      .json({ message: "Payment verified successfully", order });
+  } catch (err) {
     console.error("Verify payment error:", err);
   }
-}
-
-
+};
 
 // GET my-orders
 
@@ -951,6 +975,3 @@ exports.verifyDeliveryOtp = async (req, res) => {
     });
   }
 };
-
-
-
