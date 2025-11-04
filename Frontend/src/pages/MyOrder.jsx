@@ -37,11 +37,24 @@ const MyOrder = () => {
 
     socket.on("new-order", handleNewOrder);
 
-    socket.on("update-status", ({ orderId, shopId, status, userId }) => {
-      if (userData.role === "user" && String(userData._id) === String(userId)) {
-        dispatch(updateRealTimeOrderStatus({ orderId, shopId, status }));
-      }
-    });
+socket.on("update-status", ({ orderId, shopId, status, userId }) => {
+  console.log("Received update-status event:", {
+    orderId,
+    shopId,
+    status,
+    userId,
+  });
+  if (userData.role === "user" && String(userData._id) === String(userId._id)) {
+    dispatch(updateRealTimeOrderStatus({ orderId, shopId, status }));
+  }
+});
+
+    // socket.on("update-status", ({ orderId, shopId, status, userId }) => {
+    //   if (userData.role === "user" && String(userData._id) === String(userId)) {
+    //     dispatch(updateRealTimeOrderStatus({ orderId, shopId, status }));
+
+    //   }
+    // });
 
     return () => {
       socket.off("new-order", handleNewOrder);

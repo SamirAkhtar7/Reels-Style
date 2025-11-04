@@ -468,11 +468,29 @@ exports.updateOrderStatus = async (req, res) => {
         model: ItemModel,
         select: "name image price foodType",
       },
+      {
+        path: "user",
+        model: UserModel,
+        select: "socketId fullName email mobile location",
+      }
     ]);
+    // console.log("Populated order after status update:", order);
 
     const refreshedShopOrder = order.shopOrder.find(
       (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
     );
+
+    // Emit real-time status update via Socket.IO
+  const io = req.app.get("io"); // Ensure Socket.IO instance is available
+    if (io) {
+    const userId = order.user.socketId;
+      io.to(userId).emit("update-status", {
+        orderId: order._id,
+        shopId: shopOrder.Shop,
+        status: shopOrder.status,
+        userId: order.user,
+      });
+    }
 
     return res.status(200).json({
       message: "Order status updated successfully",
@@ -636,7 +654,7 @@ exports.acceptOrder = async (req, res) => {
     order.status = "Out of delivery";
 
     await order.save();
-
+   
     // populate updated fields for response
     await order.populate([
       { path: "shopOrder.Shop", select: "name" },
@@ -658,7 +676,10 @@ exports.acceptOrder = async (req, res) => {
       order.shopOrder.find(
         (so) => String(so._id) === String(assignment.shopOrder)
       );
+      
+  
 
+    
     return res.status(200).json({
       message: "Order accepted successfully",
       assignment,
@@ -753,6 +774,9 @@ exports.getCurrentOrders = async (req, res) => {
       customerLocation.lon = assignment.order.deliveryAddress.longitude;
       customerLocation.lat = assignment.order.deliveryAddress.latitude;
     }
+
+
+    
 
     return res.status(200).json({
       _id: assignment.order._id,

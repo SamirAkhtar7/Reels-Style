@@ -153,7 +153,8 @@ const userSlice = createSlice({
     updateRealTimeOrderStatus: (state, actions) => {
       const { orderId, shopId, status } = actions?.payload ?? {};
       if (!orderId || !shopId || typeof status === "undefined") return;
-      // find the order in myOrders
+
+      // Find the order in myOrders
       const order = (state.myOrders || []).find(
         (o) => String(o._id) === String(orderId)
       );
@@ -161,22 +162,26 @@ const userSlice = createSlice({
         console.warn("Order not found in state:", orderId);
         return;
       }
-      // find the correct shopOrder entry (handle populated Shop object or plain id)
+      console.log("Before RT update:", order);
+
+      // Find the correct shopOrder entry (handle populated Shop object or plain id)
       const shopEntry = (order.shopOrder || []).find((s) => {
         const shopVal = s?.Shop?._id ?? s?.Shop ?? s?.shop ?? s?._id;
         return (
-          String(shopVal) === String(shopId) || String(s._id) === String(shopId)
+          String(shopVal) === String(shopId._id) || // Match populated Shop object
+          String(shopVal) === String(shopId) // Match unpopulated Shop ID
         );
-      }
+      });
 
-      );
       if (!shopEntry) {
         console.warn("Shop entry not found in order:", { orderId, shopId });
         return;
       }
+
+      // Update the status
       shopEntry.status = status;
-      order.status = status;
-      // mutate via Immer proxy
+      order.status = status; // Update top-level status if needed
+      console.log("After RT update:", order);
     },
 
     setSearchItems: (state, actions) => {

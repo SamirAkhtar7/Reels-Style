@@ -38,7 +38,7 @@ const OwnerOrderCard = ({ order }) => {
   console.log(" OrderCard order:", order);
   if (!order) return null;
 
-  //console.log("Order in OwnerOrderCard:", availableDeliveryBoys);
+  console.log("Order in OwnerOrderCard:", availableDeliveryBoys);
   const handleUpdateStatus = async (orderId, shopId, status) => {
     try {
       const response = await axios.post(
@@ -50,8 +50,8 @@ const OwnerOrderCard = ({ order }) => {
       dispatch(updateOrderStatus({ orderId, shopId, status }));
 
       setAvailableDeliveryBoys(response?.data?.availableDeliveryboys);
-      //console.log("Status updated:", response.data);
-      //console.log("Available Delivery", availableDeliveryBoys.length);
+      console.log("Status updated:", response.data);
+      console.log("Available Delivery", availableDeliveryBoys.length);
     } catch (err) {
       console.error("Update status error:", err);
     }

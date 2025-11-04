@@ -8,6 +8,7 @@ import DeliveryBoyTracking from "./DeliveryBoyTracking";
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
+  const socket = useSelector((state) => state?.socket); // Assuming the socket instance is stored in state.socket
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
   const [showOtpBox, setShowOtpBox] = useState(false);
@@ -107,6 +108,21 @@ const DeliveryBoy = () => {
       console.error("Error in fetching current orders:", err);
     }
   };
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("new-assignment", (data) => {
+        if (data.senTo === userData._id) {
+          console.log("New assignment received:", data);
+          setAvailableAssignments((prev) => [...(prev || []), data]);
+        }
+      });
+
+      return () => {
+        socket.off("new-assignment");
+      };
+    }
+  }, [socket]);
 
   useEffect(() => {
     getAssignments();
