@@ -480,6 +480,11 @@ exports.updateOrderStatus = async (req, res) => {
         model: ItemModel,
         select: "name image price foodType",
       },
+      {
+        path: "user",
+        model: UserModel,
+        select: "socketId",
+      }
     ]);
 
     // locate the shopOrder entry we updated
@@ -494,6 +499,29 @@ exports.updateOrderStatus = async (req, res) => {
       // populated doc (has _id) or raw ObjectId/string
       assignmentId = rawAssignment._id ? rawAssignment._id : rawAssignment;
     }
+
+    const io = req.app.get("io");
+    if (io) { 
+      const userSocketId = order.user?.socketId;
+      if (userSocketId) {
+        io.to(userSocketId).emit("update-status", {
+          orderId: order._id,
+          shopId: updatedShopOrder.Shop?._id ,
+          status: updatedShopOrder.status,
+          userId: String(order.user?._id ?? order.user),
+
+        });
+      }
+    }
+
+
+
+
+
+
+
+
+
 
     // console.log("Updated order status:", updatedShopOrder);
     return res.status(200).json({

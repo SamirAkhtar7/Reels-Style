@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { setMyOrders } from "../redux/user.slice";
 import { getSocket } from "../socket";
+import { updateRealTimeOrderStatus } from "../redux/user.slice";
 
 const MyOrder = () => {
   const navigate = useNavigate();
@@ -35,8 +36,16 @@ const MyOrder = () => {
     };
 
     socket.on("new-order", handleNewOrder);
+
+    socket.on("update-status", ({ orderId, shopId, status, userId }) => {
+      if (userData.role === "user" && String(userData._id) === String(userId)) {
+        dispatch(updateRealTimeOrderStatus({ orderId, shopId, status }));
+      }
+    });
+
     return () => {
       socket.off("new-order", handleNewOrder);
+      socket.off("update-status");
     };
   }, [userData, dispatch]);
   return (
