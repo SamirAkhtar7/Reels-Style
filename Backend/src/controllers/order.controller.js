@@ -210,51 +210,51 @@ exports.verifyPayment = async (req, res) => {
     order.payment = true;
     order.razorpayPaymentId = razorpayPaymentId;
     await order.save();
-        await order.populate([
-          {
-            path: "shopOrder.shopOrderItems.product",
-            model: ItemModel,
-            select: "name image price",
-          },
-          { path: "shopOrder.Shop", select: "name" },
-          { path: "user", model: UserModel, select: "-password" },
-          { path: "shopOrder.owner", model: UserModel, select: "socketId" },
-        ]);
+    await order.populate([
+      {
+        path: "shopOrder.shopOrderItems.product",
+        model: ItemModel,
+        select: "name image price",
+      },
+      { path: "shopOrder.Shop", select: "name" },
+      { path: "user", model: UserModel, select: "-password" },
+      { path: "shopOrder.owner", model: UserModel, select: "socketId" },
+    ]);
 
-      const io = req.app.get("io");
-      if (io) {
-        order.shopOrder.forEach((shopOrd) => {
-          const owner = shopOrd?.owner;
-          const ownerId = String(owner?._id ?? owner);
-          const ownerSocketId = owner?.socketId;
-          if (ownerSocketId) {
-            // Filter shopOrder for this owner only
-            const ownerShopOrders = order.shopOrder.filter(
-              (so) => String(so.owner?._id ?? so.owner) === ownerId
-            );
-            const ownerTotal = ownerShopOrders.reduce(
-              (sum, so) => sum + Number(so.subtotal || 0),
-              0
-            );
-            // Build payload as in getUserOrders for owner
-            const ownerOrderPayload = {
-              ...order.toObject(),
-              shopOrder: ownerShopOrders,
-              totalAmount: ownerTotal,
-              status:
-                ownerShopOrders.length === 1
-                  ? ownerShopOrders[0].status
-                  : order.status,
-            };
-            io.to(ownerSocketId).emit("new-order", ownerOrderPayload);
-            console.log(
-              "socket emitted to owner:",
-              ownerSocketId,
-              ownerOrderPayload
-            );
-          }
-        });
-      }
+    const io = req.app.get("io");
+    if (io) {
+      order.shopOrder.forEach((shopOrd) => {
+        const owner = shopOrd?.owner;
+        const ownerId = String(owner?._id ?? owner);
+        const ownerSocketId = owner?.socketId;
+        if (ownerSocketId) {
+          // Filter shopOrder for this owner only
+          const ownerShopOrders = order.shopOrder.filter(
+            (so) => String(so.owner?._id ?? so.owner) === ownerId
+          );
+          const ownerTotal = ownerShopOrders.reduce(
+            (sum, so) => sum + Number(so.subtotal || 0),
+            0
+          );
+          // Build payload as in getUserOrders for owner
+          const ownerOrderPayload = {
+            ...order.toObject(),
+            shopOrder: ownerShopOrders,
+            totalAmount: ownerTotal,
+            status:
+              ownerShopOrders.length === 1
+                ? ownerShopOrders[0].status
+                : order.status,
+          };
+          io.to(ownerSocketId).emit("new-order", ownerOrderPayload);
+          console.log(
+            "socket emitted to owner:",
+            ownerSocketId,
+            ownerOrderPayload
+          );
+        }
+      });
+    }
     return res
       .status(200)
       .json({ message: "Payment verified successfully", order });
@@ -372,7 +372,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     // Find the specific shopOrder entry for the given shopId
-    const shopOrder = await order.shopOrder.find(
+    const shopOrder = order.shopOrder.find(
       (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
     );
     if (!shopOrder) {
@@ -387,87 +387,75 @@ exports.updateOrderStatus = async (req, res) => {
 
     let deliveryBoyPayload = [];
     // If status is "Out of delivery", find nearby delivery boys and create assignment if none exists
-    if (status === "Out of delivery" && !shopOrder.assignment) {
-      // Use delivery address coords (deliveryAddress likely has { text, latitude, longitude })
-      //console.log("order.deliveryAddress:", order.deliveryAddress);
+    if (status === "Out of delivery") {
       const addrLat = Number(order.deliveryAddress?.latitude);
       const addrLon = Number(order.deliveryAddress?.longitude);
-      //console.log("search coords (lon,lat):", addrLon, addrLat);
 
-      const searchLon = Number(addrLon);
-      const searchLat = Number(addrLat);
-      const searchCoords = [searchLon, searchLat]; // IMPORTANT: [lon, lat]
+      if (!Number.isFinite(addrLat) || !Number.isFinite(addrLon)) {
+        console.error("Invalid delivery address coordinates");
+        return res
+          .status(400)
+          .json({ message: "Invalid delivery address coordinates" });
+      }
 
-      // find nearby delivery users (returns user documents)
+      const searchCoords = [addrLon, addrLat]; // GeoJSON format: [longitude, latitude]
+
       const nearByDeliveryBoys = await UserModel.find({
         role: "foodDelivery",
         location: {
           $near: {
             $geometry: { type: "Point", coordinates: searchCoords },
-            $maxDistance: 5000,
+            $maxDistance: 5000, // 5 km radius
           },
         },
       }).exec();
 
-      // console.log("nearByDeliveryBoys found:", nearByDeliveryBoys.length);
-
-      // get ids of busy delivery boys
       const nearIds = nearByDeliveryBoys.map((d) => String(d._id));
       const busyIds = await DeliveryAssignment.find({
         assignedTo: { $in: nearIds },
         status: { $nin: ["BRODCASTED", "COMPLETED"] },
       }).distinct("assignedTo");
-      const busySet = new Set((busyIds || []).map((id) => String(id)));
 
-      // filter user docs to available ones
+      const busySet = new Set(busyIds.map((id) => String(id)));
       const availableDeliveryDocs = nearByDeliveryBoys.filter(
         (d) => !busySet.has(String(d._id))
       );
 
-      // candidate ids to broadcast
-      const candidateIds = availableDeliveryDocs.map((d) => d._id);
-      if (!candidateIds.length) {
-        await order.save();
-        console.log("No delivery available");
-        return res.status(200).json({ message: "Delivery not available" });
+      if (availableDeliveryDocs.length === 0) {
+        console.log("No available delivery boys found");
+        return res.status(200).json({ message: "No delivery boys available" });
       }
 
-      // create assignment
-      const deliveryAssignment = await DeliveryAssignment.create({
-        order: order._id,
-        shop: shopOrder.Shop,
-        shopOrder: shopOrder._id,
-        // match schema field name (typo in schema: brodcastedTo)
-        brodcastedTo: candidateIds,
-        status: "BRODCASTED",
-      });
-
-      // set the assignedDeliveryBoy and assignment refs using correct field names
-      shopOrder.assignedDeliveryBoy =
-        deliveryAssignment.assignedTo ?? deliveryAssignment.assignedTo ?? null;
-      shopOrder.assignment = deliveryAssignment._id;
-
-      // build safe payload using user docs and guard location shape
       deliveryBoyPayload = availableDeliveryDocs.map((b) => {
-        const coords = b.location?.coordinates ?? b.Location?.coordinates ?? [];
-        const lon = Number(coords?.[0]);
-        const lat = Number(coords?.[1]);
+        const coords = b.location?.coordinates || [];
+        const lon = Number(coords[0]);
+        const lat = Number(coords[1]);
         return {
           id: b._id,
-          name: b.fullName ?? b.name ?? "",
+          name: b.fullName || b.name || "",
           latitude: Number.isFinite(lat) ? lat : null,
           longitude: Number.isFinite(lon) ? lon : null,
-          mobile: b.mobile,
+          mobile: b.mobile || "",
         };
       });
+
+      // Create a delivery assignment if none exists
+      if (!shopOrder.assignment) {
+        const deliveryAssignment = await DeliveryAssignment.create({
+          order: order._id,
+          shop: shopOrder.Shop,
+          shopOrder: shopOrder._id,
+          brodcastedTo: availableDeliveryDocs.map((d) => d._id),
+          status: "BRODCASTED",
+        });
+
+        shopOrder.assignment = deliveryAssignment._id;
+      }
     }
 
-    const updatedShopOrder = order.shopOrder.find(
-      (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
-    );
     await order.save();
-    // await shopOrder.populate(" shopOrder.shopOrderItems.product", "name image price foodType");
-    // populate needed sub-doc refs (including assignedDeliveryBoy)
+
+    // Populate the updated order
     await order.populate([
       { path: "shopOrder.Shop", select: "name" },
       {
@@ -480,56 +468,17 @@ exports.updateOrderStatus = async (req, res) => {
         model: ItemModel,
         select: "name image price foodType",
       },
-      {
-        path: "user",
-        model: UserModel,
-        select: "socketId",
-      }
     ]);
 
-    // locate the shopOrder entry we updated
-    // safe extraction of assignment id (avoid reading _id of null)
     const refreshedShopOrder = order.shopOrder.find(
       (o) => String(o.Shop?._id ?? o.Shop ?? o._id) === String(shopId)
     );
 
-    let assignmentId = null;
-    const rawAssignment = refreshedShopOrder?.assignment;
-    if (rawAssignment) {
-      // populated doc (has _id) or raw ObjectId/string
-      assignmentId = rawAssignment._id ? rawAssignment._id : rawAssignment;
-    }
-
-    const io = req.app.get("io");
-    if (io) { 
-      const userSocketId = order.user?.socketId;
-      if (userSocketId) {
-        io.to(userSocketId).emit("update-status", {
-          orderId: order._id,
-          shopId: updatedShopOrder.Shop?._id ,
-          status: updatedShopOrder.status,
-          userId: String(order.user?._id ?? order.user),
-
-        });
-      }
-    }
-
-
-
-
-
-
-
-
-
-
-    // console.log("Updated order status:", updatedShopOrder);
     return res.status(200).json({
       message: "Order status updated successfully",
       shopOrder: refreshedShopOrder,
       assignedDeliveryBoy: refreshedShopOrder?.assignedDeliveryBoy ?? null,
       availableDeliveryboys: deliveryBoyPayload,
-      assignment: assignmentId,
     });
   } catch (err) {
     console.error("Update order status error:", err);
