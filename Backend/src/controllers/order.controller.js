@@ -210,15 +210,51 @@ exports.verifyPayment = async (req, res) => {
     order.payment = true;
     order.razorpayPaymentId = razorpayPaymentId;
     await order.save();
-    await order.populate([
-      {
-        path: "shopOrder.shopOrderItems.product",
-        model: ItemModel,
-        select: "name image price",
-      },
-      { path: "shopOrder.Shop", select: "name" },
-      { path: "user", model: UserModel, select: "-password" },
-    ]);
+        await order.populate([
+          {
+            path: "shopOrder.shopOrderItems.product",
+            model: ItemModel,
+            select: "name image price",
+          },
+          { path: "shopOrder.Shop", select: "name" },
+          { path: "user", model: UserModel, select: "-password" },
+          { path: "shopOrder.owner", model: UserModel, select: "socketId" },
+        ]);
+
+      const io = req.app.get("io");
+      if (io) {
+        order.shopOrder.forEach((shopOrd) => {
+          const owner = shopOrd?.owner;
+          const ownerId = String(owner?._id ?? owner);
+          const ownerSocketId = owner?.socketId;
+          if (ownerSocketId) {
+            // Filter shopOrder for this owner only
+            const ownerShopOrders = order.shopOrder.filter(
+              (so) => String(so.owner?._id ?? so.owner) === ownerId
+            );
+            const ownerTotal = ownerShopOrders.reduce(
+              (sum, so) => sum + Number(so.subtotal || 0),
+              0
+            );
+            // Build payload as in getUserOrders for owner
+            const ownerOrderPayload = {
+              ...order.toObject(),
+              shopOrder: ownerShopOrders,
+              totalAmount: ownerTotal,
+              status:
+                ownerShopOrders.length === 1
+                  ? ownerShopOrders[0].status
+                  : order.status,
+            };
+            io.to(ownerSocketId).emit("new-order", ownerOrderPayload);
+            console.log(
+              "socket emitted to owner:",
+              ownerSocketId,
+              ownerOrderPayload
+            );
+          }
+        });
+      }
     return res
       .status(200)
       .json({ message: "Payment verified successfully", order });
