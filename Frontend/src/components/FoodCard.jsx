@@ -103,7 +103,7 @@ const FoodCard = ({ props, data }) => {
       </div>
 
       <div className="flex-1 flex flex-col justify-center items-start gap-1 p-3 w-full">
-        <h1 className="font-semibold text-gray-900 text-base truncate">
+        <h1 className="font-semibold  text-gray-900 text-base truncate">
           {item.name}
         </h1>
 

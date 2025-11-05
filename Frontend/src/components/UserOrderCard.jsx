@@ -90,7 +90,7 @@ const UserOrderCard = ({ order }) => {
             const shopName = shopEntry?.Shop?.name ?? "Shop Name";
             return (
               <div
-                className="border rounded-lg p-3 bg-[#fffaf7] space-y-3"
+                className=" border rounded-lg p-3 bg-[#fffaf7] space-y-3"
                 key={shopEntry.Shop?._id ?? `shop-${idx}`}
               >
                 <p className="font-medium">{shopName}</p>
@@ -109,15 +109,15 @@ const UserOrderCard = ({ order }) => {
 
                     return (
                       <div
-                        className="flex justify-between items-center text-sm"
+                        className="flex truncate justify-between items-center text-sm"
                         key={it._id ?? product?._id ?? `item-${i}`}
                       >
-                        <div className="flex items-center border p-2 flex-col rounded-2xl  gap-2  border-gray-200 bg-white ">
-                          <div className="w-20 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 g-white">
+                        <div className="flex  items-center border p-2 flex-col rounded-2xl  gap-2  border-gray-200 bg-white ">
+                          <div className="w-20 h-16 truncate flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 g-white">
                             <SafeImg src={img} alt={title} />
                           </div>
                           <div className="truncate font-semibold">
-                            <p>{title}</p>
+                            <p className="truncate w-20">{title}</p>
                           </div>
                         </div>
 

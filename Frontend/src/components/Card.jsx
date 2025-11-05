@@ -16,7 +16,7 @@ const Card = ({ data, onClick }) => {
         onClick={onClick}
       />
 
-      <div className="absolute bottom-2 left-2 bg-[#ffffff96] bg-opacity-95 px-3 py-1  rounded-t-xl  text-sm  text-center font-medium text-gray-800 backdrop-blur md:text-base">
+      <div className="absolute truncate bottom-2 left-2 bg-[#ffffff96] bg-opacity-95 px-3 py-1  rounded-t-xl  text-sm  text-center font-medium text-gray-800 backdrop-blur md:text-base">
         {data.category || data.name}
       </div>
     </div>
