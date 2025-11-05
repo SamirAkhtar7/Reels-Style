@@ -4,16 +4,18 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
+import { getSocket } from "../socket";
 
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
-  const socket = useSelector((state) => state?.socket); // Assuming the socket instance is stored in state.socket
+  const socket = useSelector((state) => state?.user?.userData.socketId); // Assuming the socket instance is stored in state.socket
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otp, setOtp] = useState("");
 
+  // console.log("DeliveryBoy userData:", socket);
   const getAssignments = async () => {
     if (!userData) return; // wait until auth is ready
     try {
@@ -21,10 +23,10 @@ const DeliveryBoy = () => {
         withCredentials: true,
       });
       setAvailableAssignments(response.data);
-      //console.log("DeliveryBoy assignments:", response.data);
+      console.log("DeliveryBoy assignments:", response.data);
     } catch (err) {
       console.error(
-        "Error in fetching assignments:",
+        "Error in fetching Get assignments :",
         err?.response?.data ?? err.message
       );
       if (err?.response?.status === 401) navigate("/login");
@@ -110,9 +112,13 @@ const DeliveryBoy = () => {
   };
 
   useEffect(() => {
+     if (!userData) return;
+    const socket = getSocket(userData._id);
+    console.log("Socket in DeliveryBoy:", socket);
     if (socket) {
-      socket.on("new-assignment", (data) => {
-        if (data.senTo === userData._id) {
+      socket.on("new-delivery-assignment", (data) => {
+        console.log("Received new-delivery-assignment event:", data);
+        if (data.sentTo === userData._id) {
           console.log("New assignment received:", data);
           setAvailableAssignments((prev) => [...(prev || []), data]);
         }
@@ -126,7 +132,7 @@ const DeliveryBoy = () => {
 
   useEffect(() => {
     getAssignments();
-    getCurrentOrder();
+   getCurrentOrder();
   }, [userData]);
 
   return (

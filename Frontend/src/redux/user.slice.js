@@ -20,7 +20,7 @@ const userSlice = createSlice({
     totalAmount: 0,
     myOrders: [],
     searchItems: null,
-    // socket: null, // REMOVE socket from state
+    socket: null, // REMOVE socket from state
   },
   reducers: {
     // set user payload (canonical)
@@ -103,9 +103,9 @@ const userSlice = createSlice({
       state.myOrders = actions?.payload;
     },
 
-    // setSocket: (state, actions) => {
-    //   state.socket = actions?.payload;
-    // },
+    setSocket: (state, actions) => {
+      state.socket = actions?.payload;
+    },
 
     addMyOrder: (state, actions) => {
       const order = actions?.payload;
@@ -219,6 +219,7 @@ export const {
   addMyOrder,
   addToCart,
   setSearchItems,
+  setSocket,
 } = userSlice.actions;
 export default userSlice.reducer;
 // ...existing code...

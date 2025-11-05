@@ -450,6 +450,40 @@ exports.updateOrderStatus = async (req, res) => {
         });
 
         shopOrder.assignment = deliveryAssignment._id;
+
+        // Emit real-time broadcast to all available delivery boys
+        try {
+          const io = req.app.get("io");
+          if (io && Array.isArray(availableDeliveryDocs)) {
+            const payloadBase = {
+              assignmentId: deliveryAssignment._id,
+              orderId: order._id,
+              shopId: shopOrder.Shop,
+              shopName:
+                // try to read name if Shop was populated, otherwise undefined
+                (shopOrder.Shop && shopOrder.Shop.name) || undefined,
+              deliveryAddress: order.deliveryAddress,
+              items: shopOrder.shopOrderItems || [],
+              subtotal: shopOrder.subtotal || 0,
+              status: deliveryAssignment.status || "BRODCASTED",
+            };
+
+            for (const d of availableDeliveryDocs) {
+              // only emit if delivery boy has a socketId
+              if (d && d.socketId) {
+                const payload = { ...payloadBase, sentTo: d._id };
+                io.to(d.socketId).emit("new-delivery-assignment", payload);
+                console.log(
+                  "Emitted new-delivery-assignment to",
+                  d.socketId,
+                  payload
+                );
+              }
+            }
+          }
+        } catch (emitErr) {
+          console.error("Error emitting new-delivery-assignment:", emitErr);
+        }
       }
     }
 
@@ -472,7 +506,7 @@ exports.updateOrderStatus = async (req, res) => {
         path: "user",
         model: UserModel,
         select: "socketId fullName email mobile location",
-      }
+      },
     ]);
     // console.log("Populated order after status update:", order);
 
@@ -481,9 +515,9 @@ exports.updateOrderStatus = async (req, res) => {
     );
 
     // Emit real-time status update via Socket.IO
-  const io = req.app.get("io"); // Ensure Socket.IO instance is available
+    const io = req.app.get("io"); // Ensure Socket.IO instance is available
     if (io) {
-    const userId = order.user.socketId;
+      const userId = order.user.socketId;
       io.to(userId).emit("update-status", {
         orderId: order._id,
         shopId: shopOrder.Shop,
@@ -525,7 +559,7 @@ exports.getDeliveryBoyAssignment = async (req, res) => {
     // console.log("assignments in get Delivery :", assignments);
 
     if (!assignments || assignments.length === 0) {
-      return res.status(200).json([]);
+      return res.status(200).json({ message: "No assignments found" });
     }
 
     // collect shopOrder ids referenced by assignments
@@ -654,7 +688,7 @@ exports.acceptOrder = async (req, res) => {
     order.status = "Out of delivery";
 
     await order.save();
-   
+
     // populate updated fields for response
     await order.populate([
       { path: "shopOrder.Shop", select: "name" },
@@ -676,10 +710,7 @@ exports.acceptOrder = async (req, res) => {
       order.shopOrder.find(
         (so) => String(so._id) === String(assignment.shopOrder)
       );
-      
-  
 
-    
     return res.status(200).json({
       message: "Order accepted successfully",
       assignment,
@@ -774,9 +805,6 @@ exports.getCurrentOrders = async (req, res) => {
       customerLocation.lon = assignment.order.deliveryAddress.longitude;
       customerLocation.lat = assignment.order.deliveryAddress.latitude;
     }
-
-
-    
 
     return res.status(200).json({
       _id: assignment.order._id,

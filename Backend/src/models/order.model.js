@@ -45,7 +45,6 @@ const shopOrderSchema = new mongoose.Schema(
       enum: [
         "Pending",
         "Prepared",
-        "Out for delivery",
         "Out of delivery",
         "Accepted",
         "Delivered",
