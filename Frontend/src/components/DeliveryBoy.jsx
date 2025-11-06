@@ -141,10 +141,15 @@ const DeliveryBoy = () => {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setLiveLocation((prev) => ({
-            ...prev,
-            [String(userData._id)]: { lat: latitude, lng: longitude },
-          }));
+          setLiveLocation(
+          //   (prev) => ({
+          //   ...prev,
+          //   [String(userData._id)]:
+          //   {
+             { lat: latitude, lng: longitude}
+          //   },
+          // })
+          );
           try {
             s.emit("update-location", {
               userId: userData._id,
@@ -189,10 +194,10 @@ const DeliveryBoy = () => {
             Welcome, {userData?.fullName}
           </h1>
           <p className="text-[#ff4d2d] ">
-            <span className="font-semibold"> latitude: </span>
-            {userData?.location?.coordinates?.[1] ?? "N/A"},
+            <span className="font-semibold"> latitude1: </span>
+            {liveLocation.lat},
             <span className="font-semibold"> longitude: </span>
-            {userData?.location?.coordinates?.[0] ?? "N/A"}
+            {liveLocation.lng}
           </p>
         </div>
 
@@ -310,10 +315,11 @@ const DeliveryBoy = () => {
                       lat: deliveryAddrLat,
                       lng: deliveryAddrLng,
                     },
-                    deliveryBoyLocation:  {
+                    deliveryBoyLocation: {
                       lat: liveLocation[String(userData._id)]?.lat || dbLat,
                       lng: liveLocation[String(userData._id)]?.lng || dbLng,
-                    },}}
+                    },
+                  }}
                 />
               );
             })()}
