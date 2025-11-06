@@ -3,12 +3,17 @@ import React, { useEffect, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useParams } from "react-router-dom";
 import DeliveryBoyTracking from "../components/DeliveryBoyTracking";
+import { getSocket } from "../socket";
+import { useSelector } from "react-redux";
 
 const TrackOrderPage = () => {
+ 
   const { orderId } = useParams();
+  const userData = useSelector((state) => state?.user?.userData);
 
   const [currentOrder, setCurrentOrder] = useState(null);
   const [deliveryBoyLocation, setDeliveryBoyLocation] = useState(null);
+  const [liveLocation, setLiveLocation] = useState({});
 
   const handleGetOrder = async () => {
     try {
@@ -22,6 +27,55 @@ const TrackOrderPage = () => {
       return console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const s = getSocket(userData._id);
+    // ensure server registers this socket for the current user
+    try {
+      s.emit("identify", { userId: userData._id });
+    } catch (e) {
+      console.warn("TrackOrder: identify emit failed:", e);
+    }
+
+    const onIdentified = (payload) => {
+      console.log("TrackOrder: identified ack:", payload);
+    };
+    s.on("identified", onIdentified);
+
+    const onConnect = () => console.log("TrackOrder socket connected:", s.id);
+    const onConnectError = (err) =>
+      console.warn("TrackOrder socket connect error:", err);
+    s.on("connect", onConnect);
+    s.on("connect_error", onConnectError);
+
+    const handler = ({ deliveryBoyId, latitude, longitude }) => {
+      // update liveLocation map for UI consumption
+      console.log("TrackOrder received update-delivery-location:", {
+        deliveryBoyId,
+        latitude,
+        longitude,
+      });
+      setLiveLocation((prev) => ({
+        ...prev,
+        [String(deliveryBoyId)]: { lat: latitude, lng: longitude },
+      }));
+    };
+
+    s.on("update-delivery-location", handler);
+
+    return () => {
+      try {
+        s.off("update-delivery-location", handler);
+        s.off("identified", onIdentified);
+        s.off("connect", onConnect);
+        s.off("connect_error", onConnectError);
+      } catch (e) {
+        // ignore cleanup errors
+      }
+    };
+  }, [userData]);
   useEffect(() => {
     handleGetOrder();
   }, [orderId]);
@@ -111,7 +165,12 @@ const TrackOrderPage = () => {
                       lat: deliveryAddrLat,
                       lng: deliveryAddrLng,
                     },
-                    deliveryBoyLocation: { lat: dbLat, lng: dbLng },
+                    deliveryBoyLocation: liveLocation[
+                      String(assignedDB._id)
+                    ] || {
+                      lat: dbLat,
+                      lng: dbLng,
+                    },
                   }}
                 />
               </div>

@@ -22,6 +22,26 @@ exports.socketHandler = (io) => {
         console.error("Error in identify event:", error);
       }
     });
+
+    socket.on("update-location",async ({ userId, latitude, longitude }) => { 
+      try {
+       const user= await userModel.findByIdAndUpdate(userId, {
+          location: {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          },
+          isOnline: true,
+          socketId: socket.id,
+       })
+        if (user) {
+          io.emit("update-delivery-location", { deliveryBoyId:userId, latitude, longitude });
+        }
+      }catch (error) {
+        console.error("Error in update-location event:", error);
+      }
+    });
+
+
     socket.on("disconnect", async () => {
       try {
         const user = await userModel.findOneAndUpdate(

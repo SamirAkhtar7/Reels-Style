@@ -6,16 +6,18 @@ import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 import { getSocket } from "../socket";
 
+
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
-  const socket = useSelector((state) => state?.user?.userData.socketId); // Assuming the socket instance is stored in state.socket
+  const storedSocket = useSelector((state) => state?.user?.socket);
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
+  const [liveLocation, setLiveLocation] = useState([]);
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otp, setOtp] = useState("");
 
-  // console.log("DeliveryBoy userData:", socket);
+  console.log("DeliveryBoy userData:", userData);
   const getAssignments = async () => {
     if (!userData) return; // wait until auth is ready
     try {
@@ -112,27 +114,70 @@ const DeliveryBoy = () => {
   };
 
   useEffect(() => {
-     if (!userData) return;
-    const socket = getSocket(userData._id);
-    console.log("Socket in DeliveryBoy:", socket);
-    if (socket) {
-      socket.on("new-delivery-assignment", (data) => {
-        console.log("Received new-delivery-assignment event:", data);
-        if (data.sentTo === userData._id) {
-          console.log("New assignment received:", data);
-          setAvailableAssignments((prev) => [...(prev || []), data]);
-        }
-      });
+    if (!userData) return;
 
-      return () => {
-        socket.off("new-assignment");
-      };
+    // Prefer an existing stored socket instance if available, otherwise create one
+    const s = storedSocket || getSocket(userData._id);
+
+    // tell server who we are (so server can persist socketId)
+    try {
+      s.emit("identify", { userId: userData._id });
+    } catch (e) {
+      console.warn("identify emit failed:", e);
     }
-  }, [socket]);
+
+    const assignmentHandler = (data) => {
+      console.log("Received new-delivery-assignment event:", data);
+      if (String(data.sentTo) === String(userData._id)) {
+        setAvailableAssignments((prev) => [...(prev || []), data]);
+      }
+    };
+
+    s.on("new-delivery-assignment", assignmentHandler);
+
+    // geolocation watch for delivery users — emit update-location to server
+    let watchId = null;
+    if (userData.role === "foodDelivery" && navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLiveLocation((prev) => ({
+            ...prev,
+            [String(userData._id)]: { lat: latitude, lng: longitude },
+          }));
+          try {
+            s.emit("update-location", {
+              userId: userData._id,
+              latitude,
+              longitude,
+            });
+            console.log("Emitted location:", { latitude, longitude });
+          } catch (emitErr) {
+            console.warn("Failed to emit update-location:", emitErr);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+
+    return () => {
+      try {
+        s.off("new-delivery-assignment", assignmentHandler);
+      } catch (e) {
+        // ignore
+      }
+      if (watchId && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [userData, storedSocket]);
 
   useEffect(() => {
     getAssignments();
-   getCurrentOrder();
+    getCurrentOrder();
   }, [userData]);
 
   return (
@@ -265,8 +310,10 @@ const DeliveryBoy = () => {
                       lat: deliveryAddrLat,
                       lng: deliveryAddrLng,
                     },
-                    deliveryBoyLocation: { lat: dbLat, lng: dbLng },
-                  }}
+                    deliveryBoyLocation:  {
+                      lat: liveLocation[String(userData._id)]?.lat || dbLat,
+                      lng: liveLocation[String(userData._id)]?.lng || dbLng,
+                    },}}
                 />
               );
             })()}
