@@ -1055,3 +1055,61 @@ exports.verifyDeliveryOtp = async (req, res) => {
     });
   }
 };
+
+
+// get Total delivered orders count - for delivery boy dashboard
+exports.getTotalDeliveredOrdersCount = async (req, res) => { 
+  try {
+    const deliveryBoyId = req.user?._id ?? req.userId;
+    if (!deliveryBoyId) {
+      return res.status(401).json({ message: "Please login first" });
+    }
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const orders = await OrderModel.find({
+      "shopOrder.assignedDeliveryBoy": deliveryBoyId,
+      "shopOrder.status": "Delivered",
+      "shopOrder.deliveredAt": { $gte: startOfDay, $lte: endOfDay },
+    }).lean()
+
+    let toDayDeliveredCount = [];
+    orders.forEach((order) => {
+      const deliveredShopOrders = (order.shopOrder || [].filter(
+       (so) => so.status === "Delivered" &&
+       String(so.assignedDeliveryBoy) === String(deliveryBoyId) &&
+          so.deliveredAt &&
+          new Date(so.deliveredAt) >= startOfDay &&
+          new Date(so.deliveredAt) <= endOfDay
+      ));
+      toDayDeliveredCount.push(...deliveredShopOrders);
+  
+    }
+    );
+    let stats = {}
+    toDayDeliveredCount.forEach((so) => { 
+      const hour = new Date(so.deliveredAt).getHours();
+      if (!stats[hour]) {
+        stats[hour] = 0
+      }
+      stats[hour] += 1;
+
+    })
+
+   
+     let formattedStats = Object.keys(stats).map(hour => ({
+      hour: Number(hour),
+      count: stats[hour]
+     }));
+    
+    const deliveredCount = formattedStats.sort((a, b) => a.hour - b.hour);  
+    return res.status(200).json({ deliveredCount });
+
+
+   } catch (err) {
+    console.error("Get total delivered orders count error:", err);
+    return res.status(500).json({ message: "Get total delivered orders count error" });
+  }
+}
+
