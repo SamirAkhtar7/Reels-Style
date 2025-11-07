@@ -855,6 +855,7 @@ exports.getOrderById = async (req, res) => {
 exports.sendDeliveryOtp = async (req, res) => {
   try {
     const { orderId, shopOrderId } = req.body;
+    console.log("sendDeliveryOtp called with:", { orderId, shopOrderId });
     if (!orderId || !shopOrderId) {
       return res
         .status(400)
@@ -897,18 +898,32 @@ exports.sendDeliveryOtp = async (req, res) => {
 
     if (userDoc && userDoc.email) {
       try {
-        await sendDeliveryOtpEmail(userDoc, generatedOtp);
-        return res.status(200).json({
+        const info = await sendDeliveryOtpEmail(userDoc, generatedOtp);
+        // attempt to provide an ethereal preview URL if available (dev)
+        let previewUrl = null;
+        try {
+          const nodemailer = require("nodemailer");
+          previewUrl = nodemailer.getTestMessageUrl(info) || null;
+        } catch (e) {
+          // ignore
+        }
+
+        const resp = {
           message: `Delivery OTP sent successfully to ${
             userDoc.fullName || userDoc.email
           }`,
-        });
+        };
+        if (previewUrl) resp.previewUrl = previewUrl;
+        return res.status(200).json(resp);
       } catch (emailErr) {
-        console.error("sendDeliveryOtp: failed to send email", emailErr);
-        return res.status(500).json({
-          message: "Failed to send OTP email",
-          error:
-            emailErr && emailErr.message ? emailErr.message : String(emailErr),
+        // Log the error for diagnostics but treat email failure as non-fatal
+        console.error(
+          "sendDeliveryOtp: failed to send email (non-fatal):",
+          emailErr
+        );
+        return res.status(200).json({
+          message:
+            "OTP generated and saved, but sending email failed. Check server logs for details.",
         });
       }
     }

@@ -52,6 +52,7 @@ const DeliveryBoy = () => {
 
   const sendOtp = async () => {
     try {
+      console.log("Sending OTP for order:", currentOrders);
       const response = await axios.post(
         `/api/order/send-delivery-otp`,
         {
@@ -60,6 +61,7 @@ const DeliveryBoy = () => {
         },
         { withCredentials: true }
       );
+
       setShowOtpBox(true);
       //console.log("Order accepted:", response.data);
       console.log(response.data.message);
