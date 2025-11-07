@@ -114,7 +114,7 @@ const FoodCard = ({ props, data }) => {
       </div>
 
       <div className="flex mt-auto justify-between items-center w-full px-3 pb-3 gap-3">
-        <span className="font-bold text-gray-900 text-lg ">{item.price}</span>
+        <span className="font-bold text-gray-900 text-lg ">₹ {item.price}</span>
         <div className="flex items-center border rounded-full overflow-hidden shadow-sm ">
           <button
             onClick={handleDecrement}

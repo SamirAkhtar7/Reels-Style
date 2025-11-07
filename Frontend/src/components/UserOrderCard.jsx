@@ -1,14 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-
-
-/**
- * Robust UserOrderCard
- * - merges shopOrder entries by Shop id so same shop is shown once
- * - supports populated product (item.product) or denormalized item.name/price/image
- * - safe fallbacks for missing data
- */
+import axios from "axios";
+import { useState } from "react";
 
 const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "N/A");
 
@@ -53,9 +47,41 @@ const SafeImg = ({ src, alt }) => {
 
 const UserOrderCard = ({ order }) => {
   const navigator = useNavigate();
+  const [selectedRating, setSelectedRating] = useState({}); //itemID:rating
   if (!order) return null;
 
   const merged = mergeShopOrderEntries(order.shopOrder);
+
+  const handleRating = async (itemId, rating) => {
+    if (!itemId) {
+      console.warn("handleRating: missing itemId");
+      return alert("Unable to rate this item: item id not found.");
+    }
+
+    try {
+      const response = await axios.post(
+        "/api/item/rating",
+        {
+          itemId,
+          rating,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      setSelectedRating((prev) => ({ ...prev, [itemId]: rating }));
+      console.log("Rating response:", response.data);
+    } catch (err) {
+      console.error("Rating error:", err);
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err.message;
+      if (status === 404) {
+        alert(`Rating failed: ${msg}`);
+      } else {
+        alert("Failed to submit rating. Please try again later.");
+      }
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
@@ -107,9 +133,17 @@ const UserOrderCard = ({ order }) => {
                     const qty = it?.quantity ?? 0;
                     const price = it?.price ?? it?.product?.price ?? 0;
 
+                    // determine canonical productId: prefer populated product._id, then product (may be id), then item subdoc id as fallback
+                    const productId =
+                      (it?.product &&
+                        typeof it.product === "object" &&
+                        it.product._id) ||
+                      it?.product ||
+                      it?._id;
+
                     return (
                       <div
-                        className="flex truncate justify-between items-center text-sm"
+                        className="flex  truncate justify-between items-center text-sm"
                         key={it._id ?? product?._id ?? `item-${i}`}
                       >
                         <div className="flex  items-center border p-2 flex-col rounded-2xl  gap-2  border-gray-200 bg-white ">
@@ -119,6 +153,21 @@ const UserOrderCard = ({ order }) => {
                           <div className="truncate font-semibold">
                             <p className="truncate w-20">{title}</p>
                           </div>
+                          <p className=" text-gray-700 flex items-center text-xs px-1 ">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => handleRating(productId, star)}
+                                className={`ml-1 ${
+                                  (selectedRating[productId] || 0) >= star
+                                    ? "text-yellow-500"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                ★
+                              </button>
+                            ))}
+                          </p>
                         </div>
 
                         <div className="text-right text-gray-700">
@@ -144,7 +193,10 @@ const UserOrderCard = ({ order }) => {
         <div className="border-t pt-2 " />
 
         <div className="text-sm text-gray-500">
-          <button onClick={()=>navigator(`/track-order/${order._id}`)} className="px-4 py-2 bg-[#ff4d2d] text-white rounded hover:bg-rose-600 transition mt-2">
+          <button
+            onClick={() => navigator(`/track-order/${order._id}`)}
+            className="px-4 py-2 bg-[#ff4d2d] text-white rounded hover:bg-rose-600 transition mt-2"
+          >
             Track Order
           </button>
         </div>
@@ -159,21 +211,5 @@ const UserOrderCard = ({ order }) => {
     </div>
   );
 };
-
-// UserOrderCard.propTypes = {
-//   order: PropTypes.shape({
-//     _id: PropTypes.string,
-//     createdAt: PropTypes.string,
-//     paymentMethod: PropTypes.string,
-//     status: PropTypes.string,
-//     shopOrder: PropTypes.arrayOf(
-//       PropTypes.shape({
-//         Shop: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
-//         subtotal: PropTypes.number,
-//         shopOrderItems: PropTypes.arrayOf(PropTypes.object),
-//       })
-//     ),
-//   }),
-// };
 
 export default UserOrderCard;

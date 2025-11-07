@@ -265,3 +265,38 @@ exports.searchItems = async (req, res) => {
     });
   }
 }
+
+
+//rating Controller
+
+exports.rating = async (req, res) => {
+  try {
+    const { itemId, rating } = req.body;
+    if(!itemId || typeof rating !== 'number'){
+      return res.status(400).json({ message: "itemId and rating are required" });
+    }
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+    const item = await ItemModel.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    } 
+
+    // Update average rating and count
+    const newCount = item.ratings.count + 1;
+    const newAverage = (item.ratings.average * item.ratings.count + rating) / newCount;
+    item.ratings.count = newCount;
+    item.ratings.average = newAverage;
+    await item.save();
+
+    return res.status(200).json({ message: "Rating submitted successfully", item });
+ 
+
+  } catch (err) {
+    console.error("rating error:", err);
+    return res
+      .status(500)
+      .json({ message: `rating error ${err.message || err}` });
+  }
+}

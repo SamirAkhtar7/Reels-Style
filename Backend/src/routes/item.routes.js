@@ -8,6 +8,7 @@ const {
   getItemByCity,
   getItemByShop,
   searchItems,
+  rating
 } = require("../controllers/item.controller");
 const { upload } = require("../middlewares/multer");
 
@@ -50,5 +51,8 @@ itemRouter.get(
   authMiddleware.authUserMiddleware,
   searchItems
 );
+
+// Export the router
+itemRouter.post("/rating", authMiddleware.authUserMiddleware, rating)
 
 module.exports = itemRouter;
