@@ -194,7 +194,7 @@ const DeliveryBoy = () => {
             Welcome, {userData?.fullName}
           </h1>
           <p className="text-[#ff4d2d] ">
-            <span className="font-semibold"> latitude1: </span>
+            <span className="font-semibold"> latitude: </span>
             {liveLocation.lat},
             <span className="font-semibold"> longitude: </span>
             {liveLocation.lng}
