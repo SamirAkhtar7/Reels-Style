@@ -5,7 +5,15 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 import { getSocket } from "../socket";
-
+import {
+  Bar,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { BarChart } from "recharts";
 
 const DeliveryBoy = () => {
   const navigate = useNavigate();
@@ -14,6 +22,7 @@ const DeliveryBoy = () => {
   const [availableAssignments, setAvailableAssignments] = useState(null);
   const [currentOrders, setCurrentOrders] = useState(null);
   const [liveLocation, setLiveLocation] = useState([]);
+  const [todayDeliveries, setTodayDeliveries] = useState([]);
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otp, setOtp] = useState("");
 
@@ -115,6 +124,21 @@ const DeliveryBoy = () => {
     }
   };
 
+  const handleTodayDeliveries = async () => {
+    try {
+      const response = await axios.post(
+        `/api/order/get-today-deliveries`,
+        {},
+        { withCredentials: true }
+      );
+      console.log("Today's Deliveries:", response.data);
+      // backend returns { deliveredCount: [...] }
+      setTodayDeliveries(response.data?.deliveredCount || []);
+    } catch (err) {
+      console.error("Error in fetching today's deliveries:", err);
+    }
+  };
+
   useEffect(() => {
     if (!userData) return;
 
@@ -144,13 +168,13 @@ const DeliveryBoy = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           setLiveLocation(
-          //   (prev) => ({
-          //   ...prev,
-          //   [String(userData._id)]:
-          //   {
-             { lat: latitude, lng: longitude}
-          //   },
-          // })
+            //   (prev) => ({
+            //   ...prev,
+            //   [String(userData._id)]:
+            //   {
+            { lat: latitude, lng: longitude }
+            //   },
+            // })
           );
           try {
             s.emit("update-location", {
@@ -185,6 +209,7 @@ const DeliveryBoy = () => {
   useEffect(() => {
     getAssignments();
     getCurrentOrder();
+    handleTodayDeliveries();
   }, [userData]);
 
   return (
@@ -201,6 +226,27 @@ const DeliveryBoy = () => {
             <span className="font-semibold"> longitude: </span>
             {liveLocation.lng}
           </p>
+        </div>
+
+        <div className="bg-white rounded 2xl shadow-md p-5 w-[80%] mb-6 border border-orange-100">
+          <h1 className="text-lg font-bold mb-3 text-[#ff4d2d]">
+            Today Deliveries
+          </h1>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart
+              data={Array.isArray(todayDeliveries) ? todayDeliveries : []}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`} />
+              <YAxis allowDecimals={false} />
+              <Tooltip
+                formatter={(value) => value}
+                labelFormatter={(label) => `${label}:00`}
+              />
+              <Bar dataKey="count" fill="#ff4d2d" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         {/*  AvailableAssignments */}
