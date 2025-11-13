@@ -63,6 +63,7 @@ const DeliveryBoy = () => {
   };
 
   const sendOtp = async () => {
+    setmessage("")
 setLoading(true);
     try {
       console.log("Sending OTP for order:", currentOrders);
@@ -79,8 +80,8 @@ setLoading(true);
       setLoading(false)
       //console.log("Order accepted:", response.data);
       console.log(response.data.message);
-      
-      
+      setMessage(response.data.message || "OTP sent successfully");
+
     } catch (err) {
       console.error("Error in accepting order:", err);
       setLoading(false);
@@ -116,6 +117,7 @@ setLoading(true);
       // refresh data
       await getCurrentOrder();
       await getAssignments();
+      location.reload();
    // alert(response.data.message || "OTP verified successfully");
     } catch (err) {
       const payload = err?.response?.data ?? err;
@@ -267,8 +269,12 @@ setLoading(true);
           </ResponsiveContainer>
 
           <div className="max-w-sm mx-auto mt-6 p-6 bg-white rounded-2xl shadow-lg text-center">
-            <h1 className=" text-xl font-semibold text-gray-800 mb-2" >Today's Earning</h1>
-            <p className="text-2xl font-bold text-green-600">₹ {totalEarning}</p>
+            <h1 className=" text-xl font-semibold text-gray-800 mb-2">
+              Today's Earning
+            </h1>
+            <p className="text-2xl font-bold text-green-600">
+              ₹ {totalEarning}
+            </p>
           </div>
         </div>
 
@@ -401,11 +407,11 @@ setLoading(true);
                 disabled={loading}
                 className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
               >
-                { loading? "loading..." :"Mark as Delivered"}
+                {loading ? "loading..." : "Mark as Delivered"}
               </button>
             ) : (
-                <div className="mt-4 p-4 border rounded-xl bg-gray-50">
-                   {message && (
+              <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                {message && (
                   <p className="mb-2 text-green-600 font-semibold">{message}</p>
                 )}
                 <p>Enter OTP to confirm delivery:</p>
@@ -418,12 +424,11 @@ setLoading(true);
                   className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <button
-                    onClick={verifyOtp}
-                    disabled={loading}
+                  onClick={verifyOtp}
+                  disabled={loading}
                   className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
-                  >
-                    { loading? "loading..." :"confirm Delivery"}
-                 
+                >
+                  {loading ? "loading..." : "confirm Delivery"}
                 </button>
               </div>
             )}
