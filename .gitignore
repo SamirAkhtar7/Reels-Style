@@ -1,24 +1,24 @@
 # ==========================
-# Node.js Dependencies
+# Node.js dependencies
 # ==========================
 node_modules/
-frontend/node_modules/
-backend/node_modules/
+Frontend/node_modules/
+Backend/node_modules/
 
 # ==========================
-# Environment Files
+# Environment files
 # ==========================
 .env
-frontend/.env
-backend/.env
+Frontend/.env
+Backend/.env
 
 # ==========================
-# Build Output
+# Build output
 # ==========================
-frontend/build/
-frontend/dist/
-backend/dist/
-backend/build/
+Frontend/dist/
+Frontend/build/
+Backend/dist/
+Backend/build/
 
 # ==========================
 # Logs
@@ -30,14 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # ==========================
-# System Files
+# System / IDE files
 # ==========================
 .DS_Store
 Thumbs.db
-
-# ==========================
-# IDE / Editor Settings
-# ==========================
 .vscode/
 .idea/
-*.swp
