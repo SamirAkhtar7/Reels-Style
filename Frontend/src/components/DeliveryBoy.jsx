@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { BarChart } from "recharts";
 
+
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
@@ -25,6 +26,8 @@ const DeliveryBoy = () => {
   const [todayDeliveries, setTodayDeliveries] = useState([]);
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   console.log("DeliveryBoy userData:", userData);
   const getAssignments = async () => {
@@ -60,6 +63,7 @@ const DeliveryBoy = () => {
   };
 
   const sendOtp = async () => {
+setLoading(true);
     try {
       console.log("Sending OTP for order:", currentOrders);
       const response = await axios.post(
@@ -70,16 +74,22 @@ const DeliveryBoy = () => {
         },
         { withCredentials: true }
       );
-
+      
       setShowOtpBox(true);
+      setLoading(false)
       //console.log("Order accepted:", response.data);
       console.log(response.data.message);
+      
+      
     } catch (err) {
       console.error("Error in accepting order:", err);
+      setLoading(false);
     }
   };
 
   const verifyOtp = async () => {
+    setMessage("")
+    setLoading(true);
     // basic validation
     const entered = (otp || "").toString().trim();
     if (!entered || entered.length < 4 || !/^\d{4,6}$/.test(entered)) {
@@ -101,14 +111,17 @@ const DeliveryBoy = () => {
       // success UI updates
       setShowOtpBox(false);
       setOtp("");
+      setLoading(false);
+      setMessage(response.data.message || "OTP verified successfully");
       // refresh data
       await getCurrentOrder();
       await getAssignments();
-      alert(response.data.message || "Delivery confirmed");
+   // alert(response.data.message || "OTP verified successfully");
     } catch (err) {
       const payload = err?.response?.data ?? err;
       console.error("Verify OTP error:", payload);
       alert(payload?.message || "Failed to verify OTP. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -206,6 +219,11 @@ const DeliveryBoy = () => {
     };
   }, [userData, storedSocket]);
 
+
+    const ratePerDelivery = import.meta.env.VITE_DELIVERY_CHARGE ||23; // Example rate per delivery
+    const totalEarning= todayDeliveries.reduce((sum,entry)=> sum+(entry.count || 0)*ratePerDelivery,0);
+
+
   useEffect(() => {
     getAssignments();
     getCurrentOrder();
@@ -247,6 +265,11 @@ const DeliveryBoy = () => {
               <Bar dataKey="count" fill="#ff4d2d" />
             </BarChart>
           </ResponsiveContainer>
+
+          <div className="max-w-sm mx-auto mt-6 p-6 bg-white rounded-2xl shadow-lg text-center">
+            <h1 className=" text-xl font-semibold text-gray-800 mb-2" >Today's Earning</h1>
+            <p className="text-2xl font-bold text-green-600">₹ {totalEarning}</p>
+          </div>
         </div>
 
         {/*  AvailableAssignments */}
@@ -375,12 +398,16 @@ const DeliveryBoy = () => {
             {!showOtpBox ? (
               <button
                 onClick={sendOtp}
+                disabled={loading}
                 className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
               >
-                Mark as Delivered
+                { loading? "loading..." :"Mark as Delivered"}
               </button>
             ) : (
-              <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                <div className="mt-4 p-4 border rounded-xl bg-gray-50">
+                   {message && (
+                  <p className="mb-2 text-green-600 font-semibold">{message}</p>
+                )}
                 <p>Enter OTP to confirm delivery:</p>
                 <input
                   onChange={(e) => {
@@ -391,10 +418,12 @@ const DeliveryBoy = () => {
                   className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <button
-                  onClick={verifyOtp}
+                    onClick={verifyOtp}
+                    disabled={loading}
                   className="mt-3 w-full bg-green-500 font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 text-white active:scale-95 transition-transform duration-200"
-                >
-                  Confirm Delivery
+                  >
+                    { loading? "loading..." :"confirm Delivery"}
+                 
                 </button>
               </div>
             )}
