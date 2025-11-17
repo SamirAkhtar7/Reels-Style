@@ -86,7 +86,7 @@ const FoodCard = ({ props, data }) => {
   const inCart = cartItems.some((i) => String(i.id) === String(item._id));
 
   return (
-    <div className="flex-none relative w-[250px] rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white flex flex-col items-center justify-center box-border cursor-pointer hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out">
+    <div className="flex-none relative w-[220px] rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white flex flex-col items-center justify-center box-border cursor-pointer hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out">
       <div className="relative w-full h-[170px] flex justify-center items-center bg-white">
         <div className="absolute top-3 right-3 bg-white rounded-full p-1 shadow ">
           {item?.foodType === "Veg" ? (

@@ -146,6 +146,8 @@ exports.editItem = async (req, res) => {
   }
 };
 
+//get-Item-by-Id
+
 
 exports.getItemById =async (req, res) => {
   try {
@@ -162,6 +164,23 @@ exports.getItemById =async (req, res) => {
       message: `Get item by ID error ${err && err.message ? err.message : err}`,
     });
 
+  }
+}
+
+
+// get-all-items
+
+exports.getAllItems = async (req, res) => { 
+  try {
+
+    const items = await ItemModel.find()
+    return res.status(200).json({items})
+    
+  }catch (err) {
+    console.error("Get all items error:", err);
+    return res.status(500).json({
+      message: `Get all items error ${err && err.message ? err.message : err}`,
+    });
   }
 }
 
