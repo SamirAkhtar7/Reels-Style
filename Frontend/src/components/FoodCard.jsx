@@ -86,8 +86,8 @@ const FoodCard = ({ props, data }) => {
   const inCart = cartItems.some((i) => String(i.id) === String(item._id));
 
   return (
-    <div className="flex-none relative w-[220px] rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white flex flex-col items-center justify-center box-border cursor-pointer hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out">
-      <div className="relative w-full h-[170px] flex justify-center items-center bg-white">
+    <div className="relative flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px] lg:w-[220px] rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white flex flex-col items-center justify-between box-border cursor-pointer hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out">
+      <div className="relative w-full h-32 sm:h-32 md:h-40 lg:h-44 flex justify-center items-center bg-white">
         <div className="absolute top-3 right-3 bg-white rounded-full p-1 shadow ">
           {item?.foodType === "Veg" ? (
             <FaLeaf className="text-green-500 " />
@@ -102,35 +102,45 @@ const FoodCard = ({ props, data }) => {
         />
       </div>
 
-      <div className="flex-1 flex flex-col justify-center items-start gap-1 p-3 w-full">
-        <h1 className="font-semibold  text-gray-900 text-base truncate">
+      <div className="flex-1 flex flex-col justify-center items-start gap-1 p-2 w-full">
+        <h1 className="font-semibold text-gray-900 text-sm md:text-base truncate w-full">
           {item.name}
         </h1>
 
-        <div className="text-xl font-semibold flex items-center gap-1">
-          {renderStars(ratingAvg)}
+        <div className="flex items-center gap-2 mt-1 text-sm">
+          <div className="flex items-center gap-1">
+            {renderStars(ratingAvg)}
+          </div>
           <span className="text-xs text-gray-500">({ratingCount || 0})</span>
         </div>
       </div>
 
-      <div className="flex mt-auto justify-between items-center w-full px-3 pb-3 gap-3">
-        <span className="font-bold text-gray-900 text-lg ">₹ {item.price}</span>
-        <div className="flex items-center border rounded-full overflow-hidden shadow-sm ">
+      <div className="flex mt-auto justify-between items-center w-full px-1 sm:px-1 md:px-2  pb-3 gap-1 sm:gap-1 md:gamp-2">
+        <div className="font-bold text-gray-900 text-sm md:text-base">
+          ₹ {item.price}
+        </div>
+        <div className="flex items-center border rounded-full overflow-hidden shadow-sm bg-white">
           <button
             onClick={handleDecrement}
             disabled={quantity === 0}
-            className="ml-2 disabled:cursor-not-allowed"
+            aria-label="Decrease quantity"
+            className="px-1 sm:px-1 md:px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <FaMinus size={12} />
           </button>
-          <span className="px-3">{quantity}</span>
-          <button onClick={handleIncrement} className="mr-2">
+          <span className="px-1 sm:px-1 md:px-2 text-sm">{quantity}</span>
+          <button
+            onClick={handleIncrement}
+            aria-label="Increase quantity"
+            className="px-1 sm:px-1 md:px-2 py-1 flex items-center justify-center"
+          >
             <FaPlus size={12} />
           </button>
           <button
-            className={` ${
+            aria-label="Add to cart"
+            className={`ml-1 ${
               inCart ? "bg-gray-800" : "bg-[#ff4d2d]"
-            } py-2 px-3 text-white hover:bg-[#e04326] transition-colors`}
+            } py-1 sm:px-1 md:px-2 px-2 text-white hover:bg-[#e04326] transition-colors flex items-center justify-center text-sm`}
           >
             <FaShoppingCart />
           </button>
