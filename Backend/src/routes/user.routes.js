@@ -4,6 +4,20 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const userController = require("../controllers/user.controller");
 
 
+
+
+
+
+
+//pubic Routes
+
+
+
+
+
+//protected Routes
+
+
 router.get(
   "/get-user",
   authMiddleware.authUserMiddleware,

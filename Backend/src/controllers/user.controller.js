@@ -24,16 +24,6 @@ exports.updateUserLocation = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
 
-    // DEBUG: log incoming payload and auth info
-    //console.log("updateUserLocation payload:", { latitude, longitude });
-    // console.log(
-    //   "req.userId:",
-    //   req.userId,
-    //   "req.user?._id:",
-    //   req.user && req.user._id
-    // );
-
-    // resolve user id robustly
     const userId = req.userId || (req.user && (req.user._id || req.user.id));
     if (!userId) {
       console.warn("updateUserLocation: no user id in request");

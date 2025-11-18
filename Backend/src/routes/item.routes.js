@@ -15,6 +15,16 @@ const { upload } = require("../middlewares/multer");
 
 const itemRouter = express.Router();
 
+
+
+//pubic Routes
+
+
+
+
+
+//protected Routes
+
 itemRouter.post(
   "/add-item",
   authMiddleware.authUserMiddleware,
