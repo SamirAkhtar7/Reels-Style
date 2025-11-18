@@ -34,16 +34,19 @@ const UserDashboard = () => {
 
   const allItems = async () => {
     try {
-      const response = await fetch("/api/item/all-items");
-      const data = await response.json();
-      console.log("All items:", data);
-      setAllItemsList(data.items);
-    } catch (error) {
+      const response = await axios.get(`/api/item/all-items`);
+      setAllItemsList(response.data.items);
+      console.log("All items fetched:", response.data.items); // Debugging line
+    }
+    catch (error) {
       console.error("Error fetching all items:", error);
     }
-  };
+  }
 
-  allItems();
+  useEffect(() => {
+    allItems();
+  }, []);
+
 
   useEffect(() => {
     setUpdatedItemsList(itemsByCity?.items ?? []);
