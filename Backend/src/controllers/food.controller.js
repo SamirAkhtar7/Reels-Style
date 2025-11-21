@@ -4,7 +4,7 @@ const { v4: uuid } = require("uuid")
 
 
 
-exports.createFood = async (req, res) => {
+exports.createFood = async (req, res) => { 
 
     // console.log(req.body)
     // console.log(req.file)

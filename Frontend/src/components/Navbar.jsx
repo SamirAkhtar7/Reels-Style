@@ -72,14 +72,15 @@ const Navbar = () => {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-orange-400 flex items-center justify-center text-white font-extrabold">
-            v
+            F
           </div>
           <div className="hidden sm:block">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-              Vingo
+              FOODIE
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-300">
-              Discover tasty reels
+              Discover tasty reels 
+              
             </p>
           </div>
         </div>

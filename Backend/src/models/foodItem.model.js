@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const foodpartnerModel = require("./foodpartner.model");
+const userModel = require ("./user.model")
 
 const foodSchema = new mongoose.Schema({
   name: {
@@ -14,10 +14,6 @@ const foodSchema = new mongoose.Schema({
     type: String,
  
     },
-    foodpartner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"foodpartner"
-  }
 });
 
 const foodModel = mongoose.model("food", foodSchema)

@@ -14,6 +14,7 @@ const AddItems = () => {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Breakfast");
   const [foodType, setFoodType] = useState("Veg");
+
   const categories = [
     "Breakfast",
     "Lunch",
@@ -38,11 +39,13 @@ const AddItems = () => {
 
   const [frontendImage, setFrontendImage] = useState(null);
   const [bankendImage, setBackendImage] = useState(null);
+  const [frontendVideo, setFrontendVideo] = useState(null);
+  const [backendVideo, setBackendVideo] = useState(null);
   const [loading, setLoading] = useState();
 
   const dispatch = useDispatch();
 
-  console.log("myShopData", myShopData);
+  // console.log("myShopData", myShopData);
 
   // console.log("myShopData1234", Address,City,State);
   const handleImages = (e) => {
@@ -52,6 +55,16 @@ const AddItems = () => {
     setBackendImage(file);
     setFrontendImage(URL.createObjectURL(file));
   };
+
+  const handleVideos = (e) => {
+    // guard against undefined event (won't be called without an event when set correctly)
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    setBackendVideo(file);
+    setFrontendVideo(URL.createObjectURL(file));
+  }
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,6 +81,9 @@ const AddItems = () => {
       if (bankendImage) {
         formData.append("image", bankendImage);
       }
+      if (backendVideo) {
+        formData.append("video", backendVideo);
+      }
       const response = await axios.post(
         `/api/item/add-item`,
         formData,
@@ -76,7 +92,7 @@ const AddItems = () => {
 
       dispatch(setMyShopData(response?.data));
 
-      console.log("items successfully:", response.data.shop);
+      console.log("items successfully:", response.data);
       setLoading(false);
       navigate('/');
 
@@ -124,7 +140,7 @@ const AddItems = () => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-gray-700 font-semibold"> Shop Image</label>
+            <label className="text-gray-700 font-semibold"> Food Image</label>
             <input
               onChange={handleImages}
               type="file"
@@ -139,6 +155,28 @@ const AddItems = () => {
                   alt=""
                   className="w-full h-48 object-cover rounded-lg boder   "
                 />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-700 font-semibold"> Food Video</label>
+            <input
+              onChange={handleVideos}
+              type="file"
+              accept="video/*"
+              className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              placeholder="Upload your food video"
+            />
+            {frontendVideo && (
+              <div className="mt-4">
+                <video
+                  className="w-full h-48 object-cover rounded-lg boder"
+                  controls
+                  muted
+                  loop
+                  autoPlay={false}
+                  src={frontendVideo}
+                ></video>
               </div>
             )}
           </div>
@@ -188,10 +226,10 @@ const AddItems = () => {
             >
               <option value="" disabled>
                 Select Food Type
-                          </option>
-                          
-                <option value="veg">Veg</option>
-                <option value="non-veg">Non-Veg</option>
+              </option>
+
+              <option value="veg">Veg</option>
+              <option value="non-veg">Non-Veg</option>
             </select>
           </div>
 

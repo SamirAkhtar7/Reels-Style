@@ -44,6 +44,9 @@ const EditItems = () => {
     currentItem?.image || null
   );
   const [bankendImage, setBackendImage] = useState(null);
+
+  const [backendVideo, setBackendVideo] = useState(null);
+  const [frontendVideo, setFrontendVideo] = useState(currentItem?.video || null);
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
@@ -69,6 +72,7 @@ const EditItems = () => {
         setCategory(item?.category ?? "");
         setFoodType(item?.foodType ?? "");
         setFrontendImage(item?.image ?? null);
+        setFrontendVideo(item?.video ?? null);
       } catch (error) {
         console.log("Error in getting item:", error);
       } finally {
@@ -87,6 +91,15 @@ const EditItems = () => {
     setFrontendImage(URL.createObjectURL(file));
   };
 
+  const handleVideos = (e) => {
+    // guard against undefined event (won't be called without an event when set correctly)
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    setBackendVideo(file);
+    setFrontendVideo(URL.createObjectURL(file));
+  }
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -100,6 +113,9 @@ const EditItems = () => {
 
       if (bankendImage) {
         formData.append("image", bankendImage);
+      }
+      if (backendVideo) {
+        formData.append("video", backendVideo);
       }
       const response = await axios.post(`/api/item/edit-item/${id}`, formData, {
         withCredentials: true,
@@ -172,6 +188,33 @@ const EditItems = () => {
               </div>
             )}
           </div>
+
+
+             <div className="flex flex-col gap-2">
+            <label className="text-gray-700 font-semibold"> Video</label>
+            <input
+              onChange={handleVideos}
+              type="file"
+              accept="video/*"
+              className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              placeholder="Upload your food video"
+            />
+            {frontendVideo && (
+              <div className="mt-4">
+               <video
+                  className="w-full h-48 object-cover rounded-lg boder"
+                  controls
+                  muted
+                  loop
+                  autoPlay={false}
+                  src={frontendVideo}
+                ></video>
+
+              </div>
+            )}
+          </div>
+
+
 
           <div className="flex flex-col gap-2">
             <label className="block text-sm font-medium mb-1 text-gray-700 ">
