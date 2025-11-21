@@ -11,7 +11,12 @@ const {
   rating,
   getAllItems
 } = require("../controllers/item.controller");
-const { upload } = require("../middlewares/multer");
+
+
+const multer = require("multer");
+const { memoryStorage } = require("multer");
+const storage = memoryStorage();
+const upload = multer({ storage: storage });
 
 const itemRouter = express.Router();
 
@@ -28,13 +33,19 @@ const itemRouter = express.Router();
 itemRouter.post(
   "/add-item",
   authMiddleware.authUserMiddleware,
-  upload.single("image"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
   addItem
 );
 itemRouter.post(
   "/edit-item/:id",
   authMiddleware.authUserMiddleware,
-  upload.single("image"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
   editItem
 );
 itemRouter.get("/get-item/:id", authMiddleware.authUserMiddleware, getItemById);
