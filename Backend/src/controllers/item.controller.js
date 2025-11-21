@@ -3,7 +3,8 @@ const ShopModel = ShopModelImport.default || ShopModelImport;
 const ItemModelImport = require("../models/item.model");
 const ItemModel = ItemModelImport.default || ItemModelImport;
 const { uploadOnCloudinary } = require("../services/cloudinary");
-const { default: Shop } = require("../models/shop.model");
+const { v4: uuid } = require("uuid");
+const storageService = require("../services/storage.service");
 
 exports.addItem = async (req, res) => {
   try {
@@ -38,26 +39,41 @@ exports.addItem = async (req, res) => {
         .json({ message: `Missing fields: ${missing.join(", ")}` });
     }
 
-    // handle image upload (cloudinary or local fallback inside service)
     let image = null;
-    if (req.file) {
-      try {
-        const uploaded = await uploadOnCloudinary(
-          req.file.path,
-          req.file.filename
+    let video = null;
+
+    // handle image upload (support disk path OR memory buffer)
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const imgFile = req.files.image[0];
+      if (imgFile.path) {
+        // disk storage -> upload by path
+        image = await uploadOnCloudinary(imgFile.path, imgFile.filename);
+      } else if (imgFile.buffer) {
+        // memory storage -> upload buffer via storageService (ImageKit)
+        const uploadResult = await storageService.uploadFile(
+          imgFile.buffer,
+          uuid()
         );
         image =
-          (uploaded && (uploaded.secure_url || uploaded)) ||
-          `/uploads/${req.file.filename}`;
-      } catch (err) {
-        console.error("Item image upload failed:", err);
-        // return error so caller knows upload failed
-        return res.status(500).json({
-          message: "Image upload failed",
-          error: err.message || String(err),
-        });
+          uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
       }
     }
+
+    // handle video upload (support disk path OR memory buffer)
+    if (req.files && req.files.video && req.files.video.length > 0) {
+      const vidFile = req.files.video[0];
+      if (vidFile.path) {
+        video = await uploadOnCloudinary(vidFile.path, vidFile.filename);
+      } else if (vidFile.buffer) {
+        const uploadResult = await storageService.uploadFile(
+          vidFile.buffer,
+          uuid()
+        );
+        video =
+          uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+      }
+    }
+
     // find shop by owner (auth middleware should set req.user._id)
     const ownerId = req.user && req.user._id ? req.user._id : req.userId;
     const shop = await ShopModel.findOne({ owner: ownerId });
@@ -70,6 +86,7 @@ exports.addItem = async (req, res) => {
       foodType,
       price,
       image,
+      video,
       shop: shop._id,
     });
 
@@ -84,6 +101,7 @@ exports.addItem = async (req, res) => {
       path: "items",
       options: { sort: { createdAt: -1 } },
     });
+    console.log("Added item:", item);
     return res
       .status(201)
       .json({ message: "Item added successfully", item, shop });
@@ -100,24 +118,41 @@ exports.editItem = async (req, res) => {
     const itemId = req.params.id;
     const { name, category, foodType, price } = req.body;
 
-    let image;
-    if (req.file) {
-      try {
-        const uploaded = await uploadOnCloudinary(
-          req.file.path,
-          req.file.filename
-        );
-        image =
-          (uploaded && (uploaded.secure_url || uploaded)) ||
-          `/uploads/${req.file.filename}`;
-      } catch (err) {
-        console.error("Edit item image upload failed:", err);
-        return res.status(500).json({
-          message: "Image upload failed",
-          error: err.message || String(err),
-        });
-      }
+  let image = null;
+  let video = null;
+
+  // handle image upload (support disk path OR memory buffer)
+  if (req.files && req.files.image && req.files.image.length > 0) {
+    const imgFile = req.files.image[0];
+    if (imgFile.path) {
+      // disk storage -> upload by path
+      image = await uploadOnCloudinary(imgFile.path, imgFile.filename);
+    } else if (imgFile.buffer) {
+      // memory storage -> upload buffer via storageService (ImageKit)
+      const uploadResult = await storageService.uploadFile(
+        imgFile.buffer,
+        uuid()
+      );
+      image =
+        uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
     }
+  }
+
+  // handle video upload (support disk path OR memory buffer)
+  if (req.files && req.files.video && req.files.video.length > 0) {
+    const vidFile = req.files.video[0];
+    if (vidFile.path) {
+      video = await uploadOnCloudinary(vidFile.path, vidFile.filename);
+    } else if (vidFile.buffer) {
+      const uploadResult = await storageService.uploadFile(
+        vidFile.buffer,
+        uuid()
+      );
+      video =
+        uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+    }
+  }
+
 
     const update = {};
     if (name !== undefined) update.name = name;
@@ -137,7 +172,7 @@ exports.editItem = async (req, res) => {
     if (!shop)
       return res.status(404).json({ message: "Shop not found for item" });
 
-    return res.status(200).json({ message: "Item updated successfully",shop});
+    return res.status(200).json({ message: "Item updated successfully", shop });
   } catch (err) {
     console.error("Edit item error:", err);
     return res.status(500).json({
@@ -148,174 +183,166 @@ exports.editItem = async (req, res) => {
 
 //get-Item-by-Id
 
-
-exports.getItemById =async (req, res) => {
+exports.getItemById = async (req, res) => {
   try {
     const itemId = req.params.id;
-    const item = await ItemModel.findById(itemId)
+    const item = await ItemModel.findById(itemId);
     if (!item) {
-      return res.status(404).json({ message: "Item not found" })
+      return res.status(404).json({ message: "Item not found" });
     }
-    return res.status(200).json({ item })
-  }
-  catch (err) {
+    return res.status(200).json({ item });
+  } catch (err) {
     console.error("Get item by ID error:", err);
     return res.status(500).json({
       message: `Get item by ID error ${err && err.message ? err.message : err}`,
     });
-
   }
-}
-
+};
 
 // get-all-items
 
-exports.getAllItems = async (req, res) => { 
+exports.getAllItems = async (req, res) => {
   try {
-
-    const items = await ItemModel.find()
-    return res.status(200).json({items})
-    
-  }catch (err) {
+    const items = await ItemModel.find();
+    return res.status(200).json({ items });
+  } catch (err) {
     console.error("Get all items error:", err);
     return res.status(500).json({
       message: `Get all items error ${err && err.message ? err.message : err}`,
     });
   }
-}
-
+};
 
 exports.deleteItem = async (req, res) => {
   try {
     const itemId = req.params.id;
-    const item =await ItemModel.findByIdAndDelete(itemId);
+    const item = await ItemModel.findByIdAndDelete(itemId);
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
-    const shop  = await ShopModel.findById(item.shop)
-    shop.items= shop.items.filter(i => i !== item._id)
-    await shop.save()
+    const shop = await ShopModel.findById(item.shop);
+    shop.items = shop.items.filter((i) => i !== item._id);
+    await shop.save();
     await shop.populate({
       path: "items",
       options: { sort: { createdAt: -1 } },
-    })
-    return res.status(200).json({ message: "Item deleted successfully" ,shop});
-  
-    
-}
-  catch (err) {
+    });
+    return res.status(200).json({ message: "Item deleted successfully", shop });
+  } catch (err) {
     console.error("Delete item error:", err);
     return res.status(500).json({
       message: `Delete item error ${err && err.message ? err.message : err}`,
     });
   }
-}
+};
 
 exports.getItemByCity = async (req, res) => {
   try {
     const city = req.params.city;
-    if(!city){
+    if (!city) {
       return res.status(400).json({ message: "City parameter is required" });
     }
-    const shops = await ShopModel.find({city}).populate( "items");
+    const shops = await ShopModel.find({ city }).populate("items");
     if (!shops || shops.length === 0) {
       return res.status(404).json({ message: "No shops found in this city" });
     }
-    
-    const items = shops.flatMap(shop => shop.items);
+
+    const items = shops.flatMap((shop) => shop.items);
     return res.status(200).json({ items });
-    
-   }
-  catch (err) {
+  } catch (err) {
     console.error("Get item by city error:", err);
     return res.status(500).json({
-      message: `Get item by city error ${err && err.message ? err.message : err}`,
+      message: `Get item by city error ${
+        err && err.message ? err.message : err
+      }`,
     });
   }
-  
-}
+};
 
 exports.getItemByShop = async (req, res) => {
   try {
     const shopId = req.params.shopId;
-    const shop = await ShopModel.findById(shopId).populate("items")
+    const shop = await ShopModel.findById(shopId).populate("items");
     if (!shop) {
-      return res.status(404).json({ message: "Shop not found " })
+      return res.status(404).json({ message: "Shop not found " });
     }
 
-    return res.status(200).json({shop, items: shop.items })
-
-   } catch (err) {
-  
+    return res.status(200).json({ shop, items: shop.items });
+  } catch (err) {
     return res.status(500).json({
-      message: `Get item by shop error ${err && err.message ? err.message : err}`,
+      message: `Get item by shop error ${
+        err && err.message ? err.message : err
+      }`,
     });
   }
-}
+};
 
-exports.searchItems = async (req, res) => { 
+exports.searchItems = async (req, res) => {
   try {
-    const { query ,city} = req.query;
+    const { query, city } = req.query;
     if (!query || !city)
-      return res.status(400).json({ message: "Query and city parameters are required" });
+      return res
+        .status(400)
+        .json({ message: "Query and city parameters are required" });
 
-
-    const shop = await ShopModel.find({ city: { $regex: new RegExp(`^${city}$`, 'i') } }).populate("items");
+    const shop = await ShopModel.find({
+      city: { $regex: new RegExp(`^${city}$`, "i") },
+    }).populate("items");
     if (!shop || shop.length === 0) {
       return res.status(404).json({ message: "No shops found in this city" });
     }
-    const shopIds = shop.map(s => s._id);
-    const items =  await ItemModel.find({
+    const shopIds = shop.map((s) => s._id);
+    const items = await ItemModel.find({
       shop: { $in: shopIds },
       $or: [
-        { name: { $regex: new RegExp(query, 'i') } },
-        { category: { $regex: new RegExp(query, 'i') } }
-      ]
+        { name: { $regex: new RegExp(query, "i") } },
+        { category: { $regex: new RegExp(query, "i") } },
+      ],
     }).populate("shop", "name image");
 
     return res.status(200).json({ items });
-     
-  
-   }
-  catch (err) {
-   
+  } catch (err) {
     return res.status(500).json({
       message: `Search items error ${err && err.message ? err.message : err}`,
     });
   }
-}
-
+};
 
 //rating Controller
 
 exports.rating = async (req, res) => {
   try {
     const { itemId, rating } = req.body;
-    if(!itemId || typeof rating !== 'number'){
-      return res.status(400).json({ message: "itemId and rating are required" });
+    if (!itemId || typeof rating !== "number") {
+      return res
+        .status(400)
+        .json({ message: "itemId and rating are required" });
     }
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5" });
     }
     const item = await ItemModel.findById(itemId);
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
-    } 
+    }
 
     // Update average rating and count
     const newCount = item.ratings.count + 1;
-    const newAverage = (item.ratings.average * item.ratings.count + rating) / newCount;
+    const newAverage =
+      (item.ratings.average * item.ratings.count + rating) / newCount;
     item.ratings.count = newCount;
     item.ratings.average = newAverage;
     await item.save();
 
-    return res.status(200).json({ message: "Rating submitted successfully", item });
- 
-
+    return res
+      .status(200)
+      .json({ message: "Rating submitted successfully", item });
   } catch (err) {
     console.error("rating error:", err);
     return res
       .status(500)
       .json({ message: `rating error ${err.message || err}` });
   }
-}
+};
