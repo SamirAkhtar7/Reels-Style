@@ -8,7 +8,14 @@ const storageService = require("../services/storage.service");
 
 exports.addItem = async (req, res) => {
   try {
-    const { name, category, foodType: rawFoodType, price } = req.body;
+    const {
+      name,
+      category,
+      foodType: rawFoodType,
+      price,
+      videoTitle,
+      videoDescription,
+    } = req.body;
 
     // normalize foodType to match model enum values ("Veg" | "Non-Veg")
     const normalizeFoodType = (ft) => {
@@ -33,6 +40,8 @@ exports.addItem = async (req, res) => {
     if (!price) missing.push("price");
     if (!category) missing.push("category");
     if (!foodType) missing.push("foodType");
+    if( videoTitle === undefined) missing.push("videoTitle");
+    if( videoDescription === undefined) missing.push("videoDescription");
     if (missing.length) {
       return res
         .status(400)
@@ -88,6 +97,8 @@ exports.addItem = async (req, res) => {
       image,
       video,
       shop: shop._id,
+      videoTitle,
+      videoDescription,
     });
 
     // attach item to shop and save
@@ -116,7 +127,8 @@ exports.addItem = async (req, res) => {
 exports.editItem = async (req, res) => {
   try {
     const itemId = req.params.id;
-    const { name, category, foodType, price } = req.body;
+    const { name, category, foodType, price, videoTitle, videoDescription } =
+      req.body;
 
   let image = null;
   let video = null;
@@ -160,6 +172,10 @@ exports.editItem = async (req, res) => {
     if (foodType !== undefined) update.foodType = foodType;
     if (price !== undefined) update.price = price;
     if (image !== undefined) update.image = image;
+    if (video !== undefined) update.video = video;
+    if (videoTitle !== undefined) update.videoTitle = videoTitle;
+    if (videoDescription !== undefined)
+      update.videoDescription = videoDescription;
 
     const item = await ItemModel.findByIdAndUpdate(itemId, update, {
       new: true,
