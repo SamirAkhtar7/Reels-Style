@@ -17,7 +17,10 @@ const EditItems = () => {
   const [name, setName] = useState( "");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoDescription, setVideoDescription] = useState("");
   const [foodType, setFoodType] = useState("");
+  const [showVideoFields, setShowVideoFields] = useState(false);
   const categories = [
     "Breakfast",
     "Lunch",
@@ -63,7 +66,7 @@ const EditItems = () => {
         });
 
         const item = response?.data?.item ?? null;
-        console.log("item:", item.name);
+        console.log("item:", item);
         setCurrentItem(item);
 
         // initialize controlled inputs from fetched item
@@ -73,6 +76,11 @@ const EditItems = () => {
         setFoodType(item?.foodType ?? "");
         setFrontendImage(item?.image ?? null);
         setFrontendVideo(item?.video ?? null);
+        setVideoTitle(item?.videoTitle || "");
+        setVideoDescription(item?.videoDescription || "");
+        if (item?.video || item?.videoTitle || item?.videoDescription) {
+          setShowVideoFields(true);
+        }
       } catch (error) {
         console.log("Error in getting item:", error);
       } finally {
@@ -162,7 +170,7 @@ const EditItems = () => {
               onChange={(e) => {
                 setName(e.target.value);
               }}
-              value ={name}
+              value={name}
               type="text"
               className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
               placeholder="Enter Food name"
@@ -189,32 +197,57 @@ const EditItems = () => {
             )}
           </div>
 
-
-             <div className="flex flex-col gap-2">
-            <label className="text-gray-700 font-semibold"> Video</label>
-            <input
-              onChange={handleVideos}
-              type="file"
-              accept="video/*"
-              className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
-              placeholder="Upload your food video"
-            />
-            {frontendVideo && (
-              <div className="mt-4">
-               <video
-                  className="w-full h-48 object-cover rounded-lg boder"
-                  controls
-                  muted
-                  loop
-                  autoPlay={false}
-                  src={frontendVideo}
-                ></video>
-
+          {showVideoFields && (
+            <div className="flex flex-col gap-2">
+              <label className="text-gray-700 font-semibold"> Video</label>
+              <input
+                onChange={handleVideos}
+                type="file"
+                accept="video/*"
+                className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                placeholder="Upload your food video"
+              />
+              <div className="flex flex-col gap-2">
+                <label className="block text-sm font-medium mb-1 text-gray-700 ">
+                  Video Title
+                </label>
+                <input
+                  onChange={(e) => {
+                    setVideoTitle(e.target.value);
+                  }}
+                  type="text"
+                  value={videoTitle}
+                  className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  placeholder="Enter Video Title"
+                />
               </div>
-            )}
-          </div>
-
-
+              <div className="flex flex-col gap-2">
+                <label className="block text-sm font-medium mb-1 text-gray-700 ">
+                  Video Description
+                </label>
+                <textarea
+                  onChange={(e) => {
+                    setVideoDescription(e.target.value);
+                  }}
+                  className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  value={videoDescription}
+                  placeholder="Enter Video Description"
+                ></textarea>
+              </div>
+              {frontendVideo && (
+                <div className="mt-4">
+                  <video
+                    className="w-full h-48 object-cover rounded-lg boder"
+                    controls
+                    muted
+                    loop
+                    autoPlay={false}
+                    src={frontendVideo}
+                  ></video>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <label className="block text-sm font-medium mb-1 text-gray-700 ">

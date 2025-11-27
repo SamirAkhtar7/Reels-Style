@@ -224,15 +224,6 @@ const AddItems = () => {
                   className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
                   placeholder="Enter Video Description"
                 ></textarea>
-
-                {/* <input
-                  onChange={(e) => {
-                   setVideoDescription(e.target.value);
-                  }}
-                  type="text"
-                  className="border w-full px-4 py-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
-                  placeholder="Enter Food name"
-                /> */}
               </div>
 
               <div className="flex flex-col gap-2">
