@@ -10,21 +10,27 @@ const itemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    video:{
+    video: {
       type: String,
     },
+    videoTitle: {
+      type: String,
+    },
+      videoDescription: {
+        type: String,
+      },
+      videoLikes: {
+        type: Number,
+        default: 0,
+      },
+
     // video: {
-    //   videoTitle: {
-    //     type: String,
-    //     required: true,
-    //   },
+
     //   videoUrl: {
     //     type: String,
     //     required: true,
     //   },
-    //   description: {
-    //     type: String,
-    //   },
+
     // },
     shop: {
       type: mongoose.Schema.Types.ObjectId,
