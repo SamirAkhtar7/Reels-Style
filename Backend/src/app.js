@@ -10,6 +10,7 @@ const { verifyToken } = require("./middlewares/auth.middleware");
 const shopRouters = require("./routes/shop.routes");
 const itemRouters = require("./routes/item.routes");
 const orderRouter = require("./routes/oder.routes");
+const videoRouters = require("./routes/video.routes");
 
 
 const app = express();
@@ -44,5 +45,6 @@ app.use("/api/food", foodRouters);
 app.use("/api/shop", shopRouters);
 app.use("/api/item", itemRouters);
 app.use('/api/order', orderRouter);
+app.use("/api/video", videoRouters);
 
 module.exports = app;
