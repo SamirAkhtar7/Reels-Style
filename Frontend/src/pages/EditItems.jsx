@@ -75,10 +75,14 @@ const EditItems = () => {
         setCategory(item?.category ?? "");
         setFoodType(item?.foodType ?? "");
         setFrontendImage(item?.image ?? null);
-        setFrontendVideo(item?.video ?? null);
-        setVideoTitle(item?.videoTitle || "");
-        setVideoDescription(item?.videoDescription || "");
-        if (item?.video || item?.videoTitle || item?.videoDescription) {
+        setFrontendVideo(item?.videos?.videoUrl ?? null);
+        setVideoTitle(item?.videos?.name || "");
+        setVideoDescription(item?.videos?.description || "");
+        if (
+          item?.videos ||
+          item?.videos.name||
+          item?.videos.description
+        ) {
           setShowVideoFields(true);
         }
       } catch (error) {
