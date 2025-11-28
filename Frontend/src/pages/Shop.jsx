@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../config/axios";
 import { useParams } from "react-router-dom";
 import { FaStore, FaUtensils } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";

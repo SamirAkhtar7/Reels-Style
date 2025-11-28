@@ -5,7 +5,7 @@ import categories from "../category.js";
 import FoodCard from "./FoodCard";
 import Card from "./Card";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../config/axios";
 
 const UserDashboard = () => {
   const navigator = useNavigate();

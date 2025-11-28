@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../config/axios";
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/user.slice";

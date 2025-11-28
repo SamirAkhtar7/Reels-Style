@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../config/axios";
 import { useState } from "react";
 
 const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "N/A");

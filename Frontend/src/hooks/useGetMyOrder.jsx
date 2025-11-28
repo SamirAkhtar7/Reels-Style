@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../config/axios";
 import { setMyOrders } from "../redux/user.slice";
 
 const useGetMyOrder = () => {

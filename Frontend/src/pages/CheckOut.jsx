@@ -12,7 +12,7 @@ import { setLocation, setDeliveryAddress } from "../redux/mapSlice";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { MdDeliveryDining } from "react-icons/md";
-import axios from "axios";
+import axios from "../config/axios";
 import { FaMobileScreenButton, FaCreditCard } from "react-icons/fa6";
 import { addMyOrder } from "../redux/user.slice";
 

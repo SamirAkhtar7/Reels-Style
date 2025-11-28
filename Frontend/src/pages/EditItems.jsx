@@ -5,7 +5,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setMyShopData } from "../redux/ownerSlice";
-import axios from "axios";
+import axios from "../config/axios";
 
 const EditItems = () => {
   const navigate = useNavigate();

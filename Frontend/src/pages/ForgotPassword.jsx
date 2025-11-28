@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../config/axios";
 import { useSelector } from "react-redux";
 
 

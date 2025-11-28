@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../config/axios";
 import { setItemsByCity } from "../redux/user.slice";
 
 

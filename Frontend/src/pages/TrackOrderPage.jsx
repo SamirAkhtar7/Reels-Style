@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../config/axios";
 import React, { useEffect, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useParams } from "react-router-dom";
