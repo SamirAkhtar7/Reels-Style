@@ -5,13 +5,13 @@ const mongoose = require('mongoose');
 
 const connectDb = () => {
     //local Data base
-    mongoose
-    .connect("mongodb://localhost:27017/food-view")
+     mongoose
+    //   .connect("mongodb://localhost:27017/food-view")
 
-      //atlas DataBase
-    //   .connect(
-    //     "mongodb+srv://sameerakhtar40444:dzL9FpXUtYzmMiox@clusterfirst.zreyych.mongodb.net/reels-Style"
-    //   )
+      // atlas DataBase
+        .connect(
+          "mongodb+srv://sameerakhtar40444:dzL9FpXUtYzmMiox@clusterfirst.zreyych.mongodb.net/foodis"
+        )
 
       .then(() => {
         console.log("MongoDb connected");
