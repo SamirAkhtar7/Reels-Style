@@ -7,7 +7,9 @@ import { getAuth } from "firebase/auth";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: "reels-food-delivery.firebaseapp.com",
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
+    "reels-food-delivery.firebaseapp.com",
   projectId: "reels-food-delivery",
   storageBucket: "reels-food-delivery.firebasestorage.app",
   messagingSenderId: "914222338094",
@@ -19,4 +21,4 @@ const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 
-export {auth,app}
+export { auth, app };
