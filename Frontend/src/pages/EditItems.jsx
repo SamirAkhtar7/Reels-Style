@@ -14,7 +14,7 @@ const EditItems = () => {
   const [currentItem, setCurrentItem] = useState(null);
   const { id } = useParams();
 
-  const [name, setName] = useState( "");
+  const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
@@ -49,7 +49,9 @@ const EditItems = () => {
   const [bankendImage, setBackendImage] = useState(null);
 
   const [backendVideo, setBackendVideo] = useState(null);
-  const [frontendVideo, setFrontendVideo] = useState(currentItem?.video || null);
+  const [frontendVideo, setFrontendVideo] = useState(
+    currentItem?.video || null
+  );
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
@@ -78,11 +80,7 @@ const EditItems = () => {
         setFrontendVideo(item?.videos?.videoUrl ?? null);
         setVideoTitle(item?.videos?.name || "");
         setVideoDescription(item?.videos?.description || "");
-        if (
-          item?.videos ||
-          item?.videos.name||
-          item?.videos.description
-        ) {
+        if (item?.videos || item?.videos.name || item?.videos.description) {
           setShowVideoFields(true);
         }
       } catch (error) {
@@ -109,8 +107,7 @@ const EditItems = () => {
     if (!file) return;
     setBackendVideo(file);
     setFrontendVideo(URL.createObjectURL(file));
-  }
-
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

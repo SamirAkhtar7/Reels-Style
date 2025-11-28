@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import axios from "../config/axios";
 import { useNavigate } from "react-router-dom";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 import { getSocket } from "../socket";

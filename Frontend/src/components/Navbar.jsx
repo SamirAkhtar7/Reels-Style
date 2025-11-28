@@ -5,7 +5,7 @@ import { clearUser } from "../redux/user.slice";
 import { useNavigate } from "react-router-dom";
 import { setSearchItems } from "../redux/user.slice";
 
-import axios from "axios";
+import axios from "../config/axios";
 import { useEffect } from "react";
 
 

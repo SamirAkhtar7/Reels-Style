@@ -3,44 +3,42 @@ import { FaUtensils } from "react-icons/fa6";
 import { IoIosArrowBack } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import  {setMyShopData } from "../redux/ownerSlice";
+import { setMyShopData } from "../redux/ownerSlice";
 import axios from "../config/axios";
-
 
 const CreateEditeShop = () => {
   const navigate = useNavigate();
-  const{ myShopData} = useSelector((state) => state.owner);
-    const { city, state,address } = useSelector((state) => state.user);
+  const { myShopData } = useSelector((state) => state.owner);
+  const { city, state, address } = useSelector((state) => state.user);
   //  console.log("data",city,state);
   //   console.log("City from Redux:", city);
   //   console.log("State from Redux:", state);
 
   const [name, setName] = useState(myShopData?.name || "");
- 
-  const [Address, setAddress] = useState(address ||"");
-  const [City, setCity] = useState( city || "");
-  const [State, setState] = useState( state || "");
-  const [frontendImage, setFrontendImage] = useState(myShopData?.image || null) 
+
+  const [Address, setAddress] = useState(address || "");
+  const [City, setCity] = useState(city || "");
+  const [State, setState] = useState(state || "");
+  const [frontendImage, setFrontendImage] = useState(myShopData?.image || null);
   const [bankendImage, setBackendImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const dispatch = useDispatch();
 
-  const dispatch = useDispatch()
+  console.log("myShopData", myShopData);
 
-console.log("myShopData", myShopData);
-
- // console.log("myShopData1234", Address,City,State);
-   const handleImages = (e) => {
-  // guard against undefined event (won't be called without an event when set correctly)
+  // console.log("myShopData1234", Address,City,State);
+  const handleImages = (e) => {
+    // guard against undefined event (won't be called without an event when set correctly)
     const file = e?.target?.files?.[0];
-   if (!file) return;
+    if (!file) return;
     setBackendImage(file);
     setFrontendImage(URL.createObjectURL(file));
   };
-  
-  const handleSubmit = async (e) => { 
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       const formData = new FormData();
@@ -56,19 +54,17 @@ console.log("myShopData", myShopData);
         formData,
         { withCredentials: true }
       );
-      
-      dispatch(setMyShopData(response?.data))
+
+      dispatch(setMyShopData(response?.data));
 
       console.log("Shop successfully:", response.data.shop);
       setLoading(false);
       navigate("/");
-      
-    }
-    catch (error) {
+    } catch (error) {
       console.log("Error in shop creation/editing:", error);
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className=" flex justify-center items-center flex-col p-6 bg-gradient-to-br from-orange-50 relative to-white min-h-screen">

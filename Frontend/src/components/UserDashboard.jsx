@@ -37,16 +37,14 @@ const UserDashboard = () => {
       const response = await axios.get(`/api/item/all-items`);
       setAllItemsList(response.data.items);
       console.log("All items fetched:", response.data.items); // Debugging line
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error fetching all items:", error);
     }
-  }
+  };
 
   useEffect(() => {
     allItems();
   }, []);
-
 
   useEffect(() => {
     setUpdatedItemsList(itemsByCity?.items ?? []);

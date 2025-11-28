@@ -4,7 +4,7 @@ import { FaTrashAlt } from "react-icons/fa";
 import { FaPen } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import axios from "axios";
+import axios from "../config/axios";
 import { setMyShopData } from "../redux/ownerSlice";
 
 

@@ -31,7 +31,9 @@ const CheckOut = () => {
 
   const dispatch = useDispatch();
   const { location, deliveryAddress } = useSelector((state) => state.map);
-  const { cartItems, totalAmount,userData } = useSelector((state) => state.user);
+  const { cartItems, totalAmount, userData } = useSelector(
+    (state) => state.user
+  );
   const [addressInput, setAddressInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -69,9 +71,9 @@ const CheckOut = () => {
     // navigator.geolocation.getCurrentPosition(async (position) => {
     //   const { latitude, longitude } = position.coords;
     const latitude = userData?.location.coordinates[1];
-    const longitude = userData?.location.coordinates[0]
-      dispatch(setLocation({ latitude, longitude }));
-      getAddressBylatlng(latitude, longitude);
+    const longitude = userData?.location.coordinates[0];
+    dispatch(setLocation({ latitude, longitude }));
+    getAddressBylatlng(latitude, longitude);
     // });
   };
 
@@ -122,20 +124,16 @@ const CheckOut = () => {
       const result = await axios.post(`/api/order/place-order`, payload, {
         withCredentials: true,
       });
-    
-      if (paymentMethod === "COD") {
 
+      if (paymentMethod === "COD") {
         dispatch(addMyOrder(result.data?.order ?? null));
         setLoading(false);
         navigate("/order-placed");
-      }
-      else {
+      } else {
         const orderId = result.data?.order?.orderId;
         const razorOrder = result.data?.order?.razorpayOrder;
         openRazorpayWindow(orderId, razorOrder);
-        
-
-       }
+      }
 
       // dispatch the created order (backend returns { order })
     } catch (error) {
@@ -143,7 +141,6 @@ const CheckOut = () => {
       setLoading(false);
     }
   };
-
 
   const openRazorpayWindow = (orderId, razorOrder) => {
     const options = {
@@ -155,26 +152,27 @@ const CheckOut = () => {
       order_id: razorOrder.id,
       handler: async function (response) {
         try {
-          const response = await axios.post('/api/order/verify-payment', {
-            orderId,
-            razorpayPaymentId: response.razorpay_payment_id,
-           
-          },{ withCredentials: true } );
+          const response = await axios.post(
+            "/api/order/verify-payment",
+            {
+              orderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+            },
+            { withCredentials: true }
+          );
           dispatch(addMyOrder(response.data?.order ?? null));
           setLoading(false);
           navigate("/order-placed");
-
         } catch (error) {
           console.error("Error verifying payment:", error);
           setLoading(false);
         }
-      }
+      },
     };
-        
-    const rzp = new window.Razorpay(options)
+
+    const rzp = new window.Razorpay(options);
     rzp.open();
-    
-  }
+  };
   // use numeric latitude/longitude from your map slice (latitude / longitude)
   const hasCoords =
     location &&

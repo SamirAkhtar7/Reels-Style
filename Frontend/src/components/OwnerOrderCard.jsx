@@ -1,7 +1,7 @@
 import React from "react";
 import { MdPhone } from "react-icons/md";
 import { useState } from "react";
-import axios from "axios";
+import axios from "../config/axios";
 import { useDispatch } from "react-redux";
 import { updateOrderStatus } from "../redux/user.slice";
 import { FaPhoneAlt } from "react-icons/fa";

@@ -4,9 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../config/axios";
 import { useSelector } from "react-redux";
 
-
 const ForgotPassword = () => {
-
   const { userData } = useSelector((state) => state.user);
   console.log("User Data from Redux:", userData);
 
@@ -25,9 +23,9 @@ const ForgotPassword = () => {
 
   const goBack = () => navigate("/signin");
 
-    const handleSendOtp = async () => {
-       setError("");
-       setSending(true);
+  const handleSendOtp = async () => {
+    setError("");
+    setSending(true);
     try {
       const result = await axios.post(
         `/api/auth/user/send-otp`,
@@ -46,30 +44,30 @@ const ForgotPassword = () => {
   };
 
   const handleVerifyOtp = async () => {
-      try {
-        setError("");
-        setVerifying(true);
-        const result = await axios.post(
-          `/api/auth/user/verify-otp`,
-          { email, otp },
-          { withCredentials: true }
-        );
-        console.log("OTP Verified", result.data);
-        setStep(3);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to verify OTP. Please try again.");
-      } finally {
-        setVerifying(false);
-      }
+    try {
+      setError("");
+      setVerifying(true);
+      const result = await axios.post(
+        `/api/auth/user/verify-otp`,
+        { email, otp },
+        { withCredentials: true }
+      );
+      console.log("OTP Verified", result.data);
+      setStep(3);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to verify OTP. Please try again.");
+    } finally {
+      setVerifying(false);
+    }
   };
   const handleResetPassword = async () => {
     if (password !== confirmPassword) {
       alert("passwords do not match");
       return;
-      }
-             setError("");
-             setResetting(true);
+    }
+    setError("");
+    setResetting(true);
     try {
       const result = await axios.post(
         `/api/auth/user/reset-otp`,

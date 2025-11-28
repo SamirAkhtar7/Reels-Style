@@ -8,7 +8,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const Shop = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { shopId } = useParams();
   const [items, setItems] = useState([]);
   const [shopData, setShopData] = useState(null);
@@ -37,19 +37,15 @@ const Shop = () => {
   }, [shopId]);
 
   return (
-      <div className="min-h-screen bg-gray-100">
-          
-          <button 
-              onClick={() => {
-                    navigate(-2);
-              }
-                  
-              }
-               className="absolute top-4 left-4 z-20 flex items-center justify-center gap-2 bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-full shadow-transparent">
-            <FaArrowLeft />  <span>
-                  Back
-          </span>
-          </button>
+    <div className="min-h-screen bg-gray-100">
+      <button
+        onClick={() => {
+          navigate(-2);
+        }}
+        className="absolute top-4 left-4 z-20 flex items-center justify-center gap-2 bg-black/50 hover:bg-black/70 text-white px-3 py-2 rounded-full shadow-transparent"
+      >
+        <FaArrowLeft /> <span>Back</span>
+      </button>
       {shopData && (
         <div className="relative w-full md:h-80 h-64 lg-h-96 ">
           <img

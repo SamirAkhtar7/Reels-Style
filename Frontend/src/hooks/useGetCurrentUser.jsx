@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/user.slice";
 
 const useGetCurrentUser = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -12,16 +12,19 @@ const useGetCurrentUser = () => {
           withCredentials: true,
           timeout: 5000,
         });
-          // console.log(result);
-          const payload =
-            result.data.user ?? result.data.userData ?? result.data;
-          dispatch(setUserData(payload));
-          
-      } catch (err) {if (!err.response) {
-        console.error("Cannot reach backend:", err.message || err);
-      } else {
-        console.error("Backend error:", err.response.status, err.response.data);
-      }
+        // console.log(result);
+        const payload = result.data.user ?? result.data.userData ?? result.data;
+        dispatch(setUserData(payload));
+      } catch (err) {
+        if (!err.response) {
+          console.error("Cannot reach backend:", err.message || err);
+        } else {
+          console.error(
+            "Backend error:",
+            err.response.status,
+            err.response.data
+          );
+        }
       }
     };
     fetchUser();
