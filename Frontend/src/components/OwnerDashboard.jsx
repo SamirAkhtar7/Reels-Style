@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import OwnerItemCard from "./OwnerItemCard";
 import { useState } from "react";
 import axios from "../config/axios";
+import VideoCard from "./VideoCard";  
 
 const OwnerDashboard = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const getFoodVideo= async()=>{
         withCredentials: true,
       }
     );
-  console.log("Food Videos:", response.data.videos);
+  console.log("Food Videos by ShopId:", response.data.videos);
   }
   catch(err){
     console.error("Error fetching food videos:", err);
@@ -170,6 +171,17 @@ getFoodVideo();
           </div>
         ))}
       {/* <OwnerItemCard data={myShopData?.items} /> */}
+
+
+
+        {showVideos && (
+          <div className="mt-10  max-w-6xl min-w-[300px] p-2 mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 p-1 lg:grid-cols-3 gap-4">
+            <VideoCard />
+            </div>
+          </div>
+        )}
+
     </div>
   );
 };
