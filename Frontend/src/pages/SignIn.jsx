@@ -86,8 +86,7 @@ const SignIn = () => {
 
       if (resp) {
         if (Array.isArray(resp.errors) && resp.errors.length > 0) {
-          // show first validation message or join all
-          message = resp.errors[0].msg;
+          message = resp.errors[0]?.msg ?? message;
         } else if (resp.message) {
           message = resp.message;
         }

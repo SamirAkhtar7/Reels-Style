@@ -87,9 +87,8 @@ const SignUp = () => {
       let message = err.message || "Registration failed";
 
       if (resp) {
-        // show only the first error message if express-validator returned multiple
-        if (Array.isArray(resp.errors) && resp.errors.length) {
-          message = resp.errors[0].msg;
+        if (Array.isArray(resp.errors) && resp.errors.length > 0) {
+          message = resp.errors[0]?.msg ?? message;
         } else if (resp.message) {
           message = resp.message;
         }
