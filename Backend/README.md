@@ -70,7 +70,8 @@ Create a `.env` file (or set environment variables) with at least:
 MONGO_URI=mongodb+srv://<user>:<pass>@cluster0.mongodb.net/reels-style?retryWrites=true&w=majority
 PORT=5000
 JWT_SECRET=your_jwt_secret_here
-FRONTEND_URL=http://localhost:5173
+<!-- FRONTEND_URL=http://localhost:5173 -->
+FRONTEND_URL=https://foodie-frontend-bcm7.onrender.com/
 CLOUDINARY_CLOUD_NAME=xxx
 CLOUDINARY_API_KEY=xxx
 CLOUDINARY_API_SECRET=xxx

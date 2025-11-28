@@ -13,25 +13,25 @@ connectDb();
 // Allow CORS from any origin for testing purposes
 
 // Attach middleware to the Express app (not the raw HTTP server)
-app.use(cors({
-  origin: "http://localhost:5173", // your frontend URL
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "https://foodie-frontend-bcm7.onrender.com/", // your frontend URL
+    credentials: true,
+  })
+);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://foodie-frontend-bcm7.onrender.com/",
     credentials: true,
     methods: ["GET", "POST"],
   },
 });
 
-
 app.set("io", io);
 
-
 //port is 3000 is running
- socketHandler(io);
+socketHandler(io);
 server.listen(PORT, () => {
   console.log(`Server is runnning on port ${PORT} `);
 });
