@@ -20,6 +20,10 @@ Frontend/build/
 Backend/dist/
 Backend/build/
 
+# Keep uploads directory tracked but ignore its contents (allow .gitkeep)
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+
 # ==========================
 # Logs
 # ==========================

@@ -38,4 +38,29 @@ async function uploadOnCloudinary(filePath, filename) {
   }
 }
 
-module.exports = { uploadOnCloudinary, configureCloudinary };
+// add this helper to support memory-buffer uploads (stream)
+async function uploadBufferToCloudinary(buffer, filename) {
+  if (!hasCreds) {
+    const fname = filename || `upload-${Date.now()}.bin`;
+    return `/uploads/${fname}`;
+  }
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "shops",
+        public_id: filename ? filename.replace(/\.[^/.]+$/, "") : undefined,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url || result.url);
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
+module.exports = {
+  uploadOnCloudinary,
+  configureCloudinary,
+  uploadBufferToCloudinary,
+};
