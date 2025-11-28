@@ -17,9 +17,11 @@ const path = require("path");
 const app = express();
 app.use(cookiesParser());
 
-// Enable CORS for frontend origin and allow credentials (cookies)
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://foodie-frontend-bcm7.onrender.com/";
+// normalize FRONTEND_URL env (strip trailing slashes)
+const FRONTEND_URL = (
+  process.env.FRONTEND_URL || "https://foodie-frontend-bcm7.onrender.com"
+).replace(/\/+$/, "");
+
 app.use(
   cors({
     origin: FRONTEND_URL,
