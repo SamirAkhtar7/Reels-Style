@@ -33,7 +33,6 @@ const OwnerOrderCard = ({ order }) => {
 
   //console.log("Rendering OwnerOrderCard", order);
 
-  
   const [availableDeliveryBoys, setAvailableDeliveryBoys] = useState([]);
   console.log(" OrderCard order:", order);
   if (!order) return null;
@@ -77,7 +76,6 @@ const OwnerOrderCard = ({ order }) => {
 
           <p className="text-sm text-gray-600 mt-1">
             Payment Method: {order?.paymentMethod ?? "N/A"}
-           
           </p>
           {/* <p>
           {  order.payment===true ? (

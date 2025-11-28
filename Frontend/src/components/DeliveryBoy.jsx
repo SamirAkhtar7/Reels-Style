@@ -15,7 +15,6 @@ import {
 } from "recharts";
 import { BarChart } from "recharts";
 
-
 const DeliveryBoy = () => {
   const navigate = useNavigate();
   const userData = useSelector((state) => state?.user?.userData);
@@ -63,8 +62,8 @@ const DeliveryBoy = () => {
   };
 
   const sendOtp = async () => {
-    setmessage("")
-setLoading(true);
+    setmessage("");
+    setLoading(true);
     try {
       console.log("Sending OTP for order:", currentOrders);
       const response = await axios.post(
@@ -75,13 +74,12 @@ setLoading(true);
         },
         { withCredentials: true }
       );
-      
+
       setShowOtpBox(true);
-      setLoading(false)
+      setLoading(false);
       //console.log("Order accepted:", response.data);
       console.log(response.data.message);
       setMessage(response.data.message || "OTP sent successfully");
-
     } catch (err) {
       console.error("Error in accepting order:", err);
       setLoading(false);
@@ -89,7 +87,7 @@ setLoading(true);
   };
 
   const verifyOtp = async () => {
-    setMessage("")
+    setMessage("");
     setLoading(true);
     // basic validation
     const entered = (otp || "").toString().trim();
@@ -118,7 +116,7 @@ setLoading(true);
       await getCurrentOrder();
       await getAssignments();
       location.reload();
-   // alert(response.data.message || "OTP verified successfully");
+      // alert(response.data.message || "OTP verified successfully");
     } catch (err) {
       const payload = err?.response?.data ?? err;
       console.error("Verify OTP error:", payload);
@@ -221,10 +219,11 @@ setLoading(true);
     };
   }, [userData, storedSocket]);
 
-
-    const ratePerDelivery = import.meta.env.VITE_DELIVERY_CHARGE ||23; // Example rate per delivery
-    const totalEarning= todayDeliveries.reduce((sum,entry)=> sum+(entry.count || 0)*ratePerDelivery,0);
-
+  const ratePerDelivery = import.meta.env.VITE_DELIVERY_CHARGE || 23; // Example rate per delivery
+  const totalEarning = todayDeliveries.reduce(
+    (sum, entry) => sum + (entry.count || 0) * ratePerDelivery,
+    0
+  );
 
   useEffect(() => {
     getAssignments();

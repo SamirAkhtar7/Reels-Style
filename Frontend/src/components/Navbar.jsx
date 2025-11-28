@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { FiSearch, FiPlus, FiUser,FiClipboard , FiMapPin,FiShoppingCart } from "react-icons/fi";
+import {
+  FiSearch,
+  FiPlus,
+  FiUser,
+  FiClipboard,
+  FiMapPin,
+  FiShoppingCart,
+} from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user.slice";
 import { useNavigate } from "react-router-dom";
@@ -8,64 +15,55 @@ import { setSearchItems } from "../redux/user.slice";
 import axios from "../config/axios";
 import { useEffect } from "react";
 
-
 const Navbar = () => {
   const navigate = useNavigate();
   const { userData, city, cartItems, myOrders } = useSelector(
     (state) => state?.user
   );
-  const  myShopData  = useSelector((state) => state?.owner?.myShopData);
- //console.log("Navbar My Order ShopData:", myOrders);
+  const myShopData = useSelector((state) => state?.owner?.myShopData);
+  //console.log("Navbar My Order ShopData:", myOrders);
 
-//console.log("Navbar userData cartItem: ",cartItems);
+  //console.log("Navbar userData cartItem: ",cartItems);
 
+  const name = userData?.fullName;
 
- const name = userData?.fullName;
+  const [showInfo, setShowInfo] = useState(false);
+  const dispatch = useDispatch();
+  const [query, setQuery] = useState("");
 
- 
-  
-  const [showInfo, setShowInfo] = useState(false)
-  const dispatch = useDispatch()
-  const [query , setQuery] = useState("")
-
-  const handleLogout = async() => {
+  const handleLogout = async () => {
     try {
-      const result= await axios.get('/api/auth/user/logout', { withCredentials: true });
+      const result = await axios.get("/api/auth/user/logout", {
+        withCredentials: true,
+      });
       console.log("Logout successful:", result?.data);
-     dispatch(clearUser());
-      
+      dispatch(clearUser());
     } catch (error) {
       console.error("Logout failed:", error);
     }
-  }
-   const  hanldeSearchItems = async () => {
-      try {
-        const response = await axios.get(`/api/item/search-items?query=${query}&city=${city}`, {
-         
+  };
+  const hanldeSearchItems = async () => {
+    try {
+      const response = await axios.get(
+        `/api/item/search-items?query=${query}&city=${city}`,
+        {
           withCredentials: true,
         }
-          
-        
-        );
-        console.log("Search items response:", response.data);
-       dispatch( setSearchItems(response.data.items ?? []));
-      }
-      catch (err) {
-        console.error("Search items error:", err);
-      
-          
-      }
-  }
-  
+      );
+      console.log("Search items response:", response.data);
+      dispatch(setSearchItems(response.data.items ?? []));
+    } catch (err) {
+      console.error("Search items error:", err);
+    }
+  };
+
   useEffect(() => {
     if (query.length > 2) {
       hanldeSearchItems();
+    } else {
+      dispatch(setSearchItems([]));
     }
-    else {
-      dispatch( setSearchItems([]));
-    }
-    
-  },[query])
+  }, [query]);
 
   return (
     <header className=" w-screen bg-white dark:bg-slate-900/70 border-b dark:border-slate-700 shadow-sm">
@@ -79,8 +77,7 @@ const Navbar = () => {
               FOODIE
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-300">
-              Discover tasty reels 
-              
+              Discover tasty reels
             </p>
           </div>
         </div>

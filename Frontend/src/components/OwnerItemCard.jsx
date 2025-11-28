@@ -7,29 +7,23 @@ import { useDispatch } from "react-redux";
 import axios from "../config/axios";
 import { setMyShopData } from "../redux/ownerSlice";
 
-
 const OwnerItemCard = ({ data, ...rest }) => {
   const navigator = useNavigate();
   const dispatch = useDispatch();
 
+  const handleDeleteItem = async () => {
+    try {
+      const response = await axios.get(`/api/item/delete-item/${data._id}`, {
+        withCredentials: true,
+      });
 
-
-
-    const handleDeleteItem = async () => {
-      try {
-    
-        const response = await axios.get(`/api/item/delete-item/${data._id}`, {
-          withCredentials: true,
-        });
-        
-        console.log("Item deleted successfully:", response.data);
-        dispatch(setMyShopData(response?.data))
-        // Optionally, you can refresh the item list or update the state here
-      } catch (error) {
-        console.error("Error deleting item:", error);
-  }
-  
+      console.log("Item deleted successfully:", response.data);
+      dispatch(setMyShopData(response?.data));
+      // Optionally, you can refresh the item list or update the state here
+    } catch (error) {
+      console.error("Error deleting item:", error);
     }
+  };
   // support either <OwnerItemCard data={item} /> or <OwnerItemCard {...item} />
   const item = data ?? rest;
   const {
