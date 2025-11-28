@@ -156,7 +156,7 @@ const SignIn = () => {
       <div className="w-full max-w-md bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm border border-gray-100 dark:border-slate-700 rounded-2xl shadow-lg p-8">
         <header className="mb-6 text-center">
           <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-orange-400 to-amber-400">
-            vingo
+            FooDie
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             Sign in to your account to get started with delicious food

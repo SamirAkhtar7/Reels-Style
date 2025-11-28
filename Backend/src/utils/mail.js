@@ -11,24 +11,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 exports.sendOtpEmail = async (to, otp) => {
-    
-    await transporter.sendMail({
-        from: `"Vingo Support" <${process.env.EMAIL}>`, // sender address
-        to, // list of receivers
-        subject: "Your OTP Code", // Subject line
-        text: `Your OTP code is ${otp}. It is valid for 10 minutes.`, // plain text body
-        html: `<p>Your OTP code is <b>${otp}</b>. It is valid for 10 minutes.</p>`, // html body
-    })
-}
-
-exports.sendDeliveryOtpEmail = async (user, otp) => { 
   await transporter.sendMail({
-    from: `"Vingo Support" <${process.env.EMAIL}>`, // sender address
+    from: `"FooDie Support" <${process.env.EMAIL}>`, // sender address
+    to, // list of receivers
+    subject: "Your OTP Code", // Subject line
+    text: `Your OTP code is ${otp}. It is valid for 10 minutes.`, // plain text body
+    html: `<p>Your OTP code is <b>${otp}</b>. It is valid for 10 minutes.</p>`, // html body
+  });
+};
+
+exports.sendDeliveryOtpEmail = async (user, otp) => {
+  await transporter.sendMail({
+    from: `"FooDie Support" <${process.env.EMAIL}>`, // sender address
     to: user.email, // list of receivers
     subject: "Your Delivery OTP Code", // Subject line
     text: `Your Delivery OTP code is ${otp}. It is valid for 10 minutes.`, // plain text body
     html: `<p>Your Delivery OTP code is <b>${otp}</b>. It is valid for 10 minutes.</p>`, // html body
-  })
-}
+  });
+};
