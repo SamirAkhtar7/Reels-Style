@@ -58,7 +58,8 @@ const CheckOut = () => {
       const result = await axios.get(
         `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${
           import.meta.env.VITE_GEOAPIKEY
-        }`
+        }`,
+        { withCredentials: false }
       );
       const addressData = `${result?.data?.features[0].properties.address_line1}, ${result?.data?.features[0].properties.address_line2}`;
       dispatch(setDeliveryAddress(addressData));
@@ -82,7 +83,8 @@ const CheckOut = () => {
       const result = await axios.get(
         `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(
           addressInput
-        )}&apiKey=${import.meta.env.VITE_GEOAPIKEY}`
+        )}&apiKey=${import.meta.env.VITE_GEOAPIKEY}`,
+        { withCredentials: false }
       );
       console.log("Latlng Data:", result?.data);
       const lat = result?.data?.features[0]?.properties.lat;
