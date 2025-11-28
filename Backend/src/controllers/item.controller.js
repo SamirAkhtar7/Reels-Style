@@ -5,6 +5,8 @@ const ItemModel = ItemModelImport.default || ItemModelImport;
 const { uploadOnCloudinary } = require("../services/cloudinary");
 const { v4: uuid } = require("uuid");
 const storageService = require("../services/storage.service");
+const FoodVideoImport = require("../models/foodItem.model");
+const FoodVideoModel = FoodVideoImport.default || FoodVideoImport;
 
 exports.addItem = async (req, res) => {
   try {
@@ -40,8 +42,8 @@ exports.addItem = async (req, res) => {
     if (!price) missing.push("price");
     if (!category) missing.push("category");
     if (!foodType) missing.push("foodType");
-    if( videoTitle === undefined) missing.push("videoTitle");
-    if( videoDescription === undefined) missing.push("videoDescription");
+    if (videoTitle === undefined) missing.push("videoTitle");
+    if (videoDescription === undefined) missing.push("videoDescription");
     if (missing.length) {
       return res
         .status(400)
@@ -89,13 +91,27 @@ exports.addItem = async (req, res) => {
     if (!shop)
       return res.status(404).json({ message: "Shop not found for owner" });
 
+    // If we have an uploaded video URL, create a separate video doc and reference it
+    let videoRef = null;
+    if (video) {
+      const fv = await FoodVideoModel.create({
+        name: videoTitle || name,
+        videoUrl: video,
+        description: videoDescription || "",
+        like: 0,
+      });
+      videoRef = fv._id;
+    }
+
     const item = await ItemModel.create({
       name,
       category,
       foodType,
       price,
       image,
-      video,
+      // keep legacy video url (optional), and store reference in `videos`
+      video: video || null,
+      videos: videoRef,
       shop: shop._id,
       videoTitle,
       videoDescription,
@@ -130,41 +146,40 @@ exports.editItem = async (req, res) => {
     const { name, category, foodType, price, videoTitle, videoDescription } =
       req.body;
 
-  let image = null;
-  let video = null;
+    let image = null;
+    let video = null;
 
-  // handle image upload (support disk path OR memory buffer)
-  if (req.files && req.files.image && req.files.image.length > 0) {
-    const imgFile = req.files.image[0];
-    if (imgFile.path) {
-      // disk storage -> upload by path
-      image = await uploadOnCloudinary(imgFile.path, imgFile.filename);
-    } else if (imgFile.buffer) {
-      // memory storage -> upload buffer via storageService (ImageKit)
-      const uploadResult = await storageService.uploadFile(
-        imgFile.buffer,
-        uuid()
-      );
-      image =
-        uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+    // handle image upload (support disk path OR memory buffer)
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const imgFile = req.files.image[0];
+      if (imgFile.path) {
+        // disk storage -> upload by path
+        image = await uploadOnCloudinary(imgFile.path, imgFile.filename);
+      } else if (imgFile.buffer) {
+        // memory storage -> upload buffer via storageService (ImageKit)
+        const uploadResult = await storageService.uploadFile(
+          imgFile.buffer,
+          uuid()
+        );
+        image =
+          uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+      }
     }
-  }
 
-  // handle video upload (support disk path OR memory buffer)
-  if (req.files && req.files.video && req.files.video.length > 0) {
-    const vidFile = req.files.video[0];
-    if (vidFile.path) {
-      video = await uploadOnCloudinary(vidFile.path, vidFile.filename);
-    } else if (vidFile.buffer) {
-      const uploadResult = await storageService.uploadFile(
-        vidFile.buffer,
-        uuid()
-      );
-      video =
-        uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+    // handle video upload (support disk path OR memory buffer)
+    if (req.files && req.files.video && req.files.video.length > 0) {
+      const vidFile = req.files.video[0];
+      if (vidFile.path) {
+        video = await uploadOnCloudinary(vidFile.path, vidFile.filename);
+      } else if (vidFile.buffer) {
+        const uploadResult = await storageService.uploadFile(
+          vidFile.buffer,
+          uuid()
+        );
+        video =
+          uploadResult?.url || uploadResult?.secure_url || uploadResult || null;
+      }
     }
-  }
-
 
     const update = {};
     if (name !== undefined) update.name = name;
@@ -176,6 +191,30 @@ exports.editItem = async (req, res) => {
     if (videoTitle !== undefined) update.videoTitle = videoTitle;
     if (videoDescription !== undefined)
       update.videoDescription = videoDescription;
+
+    // If a new video URL is present in the update, create or update the referenced video doc
+    if (update.video) {
+      const existingItem = await ItemModel.findById(itemId);
+      if (existingItem && existingItem.videos) {
+        // update existing referenced video document
+        await FoodVideoModel.findByIdAndUpdate(existingItem.videos, {
+          videoUrl: update.video,
+          name:
+            update.videoTitle || existingItem.videoTitle || existingItem.name,
+          description:
+            update.videoDescription || existingItem.videoDescription || "",
+        });
+      } else {
+        // create a new video doc and attach
+        const fv = await FoodVideoModel.create({
+          name: update.videoTitle || update.name || "",
+          videoUrl: update.video,
+          description: update.videoDescription || "",
+          like: 0,
+        });
+        update.videos = fv._id;
+      }
+    }
 
     const item = await ItemModel.findByIdAndUpdate(itemId, update, {
       new: true,
@@ -202,7 +241,7 @@ exports.editItem = async (req, res) => {
 exports.getItemById = async (req, res) => {
   try {
     const itemId = req.params.id;
-    const item = await ItemModel.findById(itemId);
+    const item = await ItemModel.findById(itemId).populate("videos");
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
@@ -219,7 +258,7 @@ exports.getItemById = async (req, res) => {
 
 exports.getAllItems = async (req, res) => {
   try {
-    const items = await ItemModel.find();
+    const items = await ItemModel.find().populate("videos");
     return res.status(200).json({ items });
   } catch (err) {
     console.error("Get all items error:", err);
@@ -258,7 +297,10 @@ exports.getItemByCity = async (req, res) => {
     if (!city) {
       return res.status(400).json({ message: "City parameter is required" });
     }
-    const shops = await ShopModel.find({ city }).populate("items");
+    const shops = await ShopModel.find({ city }).populate({
+      path: "items",
+      populate: { path: "videos" },
+    });
     if (!shops || shops.length === 0) {
       return res.status(404).json({ message: "No shops found in this city" });
     }
@@ -278,7 +320,10 @@ exports.getItemByCity = async (req, res) => {
 exports.getItemByShop = async (req, res) => {
   try {
     const shopId = req.params.shopId;
-    const shop = await ShopModel.findById(shopId).populate("items");
+    const shop = await ShopModel.findById(shopId).populate({
+      path: "items",
+      populate: { path: "videos" },
+    });
     if (!shop) {
       return res.status(404).json({ message: "Shop not found " });
     }
@@ -314,7 +359,9 @@ exports.searchItems = async (req, res) => {
         { name: { $regex: new RegExp(query, "i") } },
         { category: { $regex: new RegExp(query, "i") } },
       ],
-    }).populate("shop", "name image");
+    })
+      .populate("shop", "name image")
+      .populate("videos");
 
     return res.status(200).json({ items });
   } catch (err) {
