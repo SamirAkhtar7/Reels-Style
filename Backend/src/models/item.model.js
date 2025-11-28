@@ -10,28 +10,26 @@ const itemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    video: {
-      type: String,
-    },
-    videoTitle: {
-      type: String,
-    },
-      videoDescription: {
-        type: String,
-      },
-      videoLikes: {
-        type: Number,
-        default: 0,
-      },
-
     // video: {
-
-    //   videoUrl: {
+    //   type: String,
+    // },
+    // videoTitle: {
+    //   type: String,
+    // },
+    //   videoDescription: {
     //     type: String,
-    //     required: true,
+    //   },
+    //   videoLikes: {
+    //     type: Number,
+    //     default: 0,
     //   },
 
-    // },
+
+    videos:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"food"
+    },
+
     shop: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Shop",
