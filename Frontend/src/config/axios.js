@@ -3,7 +3,7 @@ import axios from "axios";
 // Read API base URL injected at build time by Vite.
 const rawBase = import.meta.env.VITE_API_URL || "";
 // Normalize: trim trailing slashes
-const baseURL = rawBase ? rawBase.replace(/\/+$"", "") : "";
+const baseURL = rawBase ? rawBase.replace(/\/+$/, "") : "";
 
 if (!baseURL && import.meta.env.PROD) {
   // In production, empty baseURL likely means VITE_API_URL wasn't set at build time.
