@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 connectDb();
 
 // normalize frontend origin (strip trailing slashes)
+
 const FRONTEND_URL = (
   process.env.FRONTEND_URL || "https://foodie-frontend-bcm7.onrender.com"
 ).replace(/\/+$/, "");
