@@ -229,14 +229,14 @@ const SignIn = () => {
               {loading ? <ClipLoader size={20} /> : "Sign in"}
             </button>
 
-            <button
+            {/* <button
               onClick={handleGoogleAuth}
               type="button"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 border border-gray-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-200 font-medium transition"
             >
               <FcGoogle size={20} />
               <span> Continue with Google </span>
-            </button>
+            </button> */}
           </div>
 
           <p className="text-center text-sm text-slate-600 dark:text-slate-300 mt-3">
