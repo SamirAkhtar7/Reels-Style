@@ -297,7 +297,7 @@ const SignUp = () => {
               {loading ? <ClipLoader size={20} /> : "Create account"}
             </button>
 
-            <button
+            {/* <button
               onClick={handleGoogleAuth}
               disabled={loading}
               type="button"
@@ -305,7 +305,7 @@ const SignUp = () => {
             >
               <FcGoogle size={20} />
               <span> Continue with Google </span>
-            </button>
+            </button> */}
           </div>
 
           <p className="text-center text-sm text-slate-600 dark:text-slate-300 mt-3">
