@@ -13,9 +13,12 @@ connectDb();
 
 // normalize frontend origin (strip trailing slashes)
 
+// const FRONTEND_URL = (
+//   process.env.FRONTEND_URL || "https://foodie-frontend-bcm7.onrender.com"
+// ).replace(/\/+$/, "");
 const FRONTEND_URL = (
   process.env.FRONTEND_URL || "https://foodie-frontend-bcm7.onrender.com"
-).replace(/\/+$/, "");
+);
 
 // Attach middleware to the Express app (not the raw HTTP server)
 app.use(
