@@ -4,7 +4,6 @@ This README documents the Backend of the Reels-Style (Zomato-style) project.
 It lists environment setup, how to run the server, and a complete API reference with request and response examples for every backend route in this repository.
 
 > Location: `Backend/`
-
 ---
 
 ## Table of contents
