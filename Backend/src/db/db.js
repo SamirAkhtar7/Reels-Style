@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 
-// mongodb data base 
+
 
 const connectDb = () => {
     //local Data base
