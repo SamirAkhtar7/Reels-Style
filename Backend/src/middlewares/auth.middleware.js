@@ -3,8 +3,6 @@ const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model")
 
 
-
-
 exports.authFoodpartnerMiddleware = async(req, res, next) => {
     
     const token = req.cookies.token;
@@ -13,8 +11,11 @@ exports.authFoodpartnerMiddleware = async(req, res, next) => {
             Message:"Unauthorized"
         })
     }
+
+
     try {
         const decode = jwt.verify(token, process.env.JWT_SECRET)
+
         const foodPartner = await foodpartnerModel.findById(decode.id);
         req.foodPartner = foodPartner;
         next()
