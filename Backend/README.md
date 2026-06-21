@@ -143,7 +143,7 @@ General error response shape:
 "message": "User registered successfully",
 "token": "<jwt-token>",
 "user": {
-"\_id": "64f...",
+"\_id": "64fhfjd...",
 "email": "john@example.com",
 "fullName": "John Doe",
 "mobile": "9999999999",
